@@ -3,7 +3,6 @@
 import {
 	createAuthHarness,
 	createTestAccount,
-	createUniqueEmail,
 	createUniqueUsername,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -67,7 +66,6 @@ describe('Registration validation', () => {
 		const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail(),
 				username: createUniqueUsername(),
 				global_name: 'Test User',
 				password: 'weak',
@@ -84,7 +82,6 @@ describe('Registration validation', () => {
 		const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail(),
 				username: 'a'.repeat(33),
 				global_name: 'Test User',
 				password: 'a-strong-password',
@@ -116,7 +113,6 @@ describe('Registration validation', () => {
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail(),
 				username: createUniqueUsername(),
 				global_name: 'Test User',
 				password: 'a-strong-password',
@@ -130,7 +126,6 @@ describe('Registration validation', () => {
 			const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
 				.post('/auth/register')
 				.body({
-					email: createUniqueEmail('impossible-dob'),
 					username: createUniqueUsername('impossible'),
 					global_name: 'Test User',
 					password: 'a-strong-password',
@@ -147,7 +142,6 @@ describe('Registration validation', () => {
 		const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('underage'),
 				username: createUniqueUsername('underage'),
 				global_name: 'Test User',
 				password: 'a-strong-password',
@@ -165,7 +159,6 @@ describe('Registration validation', () => {
 		}>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('valid-dob'),
 				username: createUniqueUsername('validdob'),
 				global_name: 'Test User',
 				password: 'a-strong-password',
@@ -182,7 +175,6 @@ describe('Registration validation', () => {
 		}>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('emoji'),
 				username: createUniqueUsername('emoji'),
 				global_name: globalName,
 				password: 'a-strong-password',
@@ -203,7 +195,6 @@ describe('Registration validation', () => {
 		}>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('derived'),
 				global_name: 'Magic Tester',
 				password: 'a-strong-password',
 				date_of_birth: '2000-01-01',

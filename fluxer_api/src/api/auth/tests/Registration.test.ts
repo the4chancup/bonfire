@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID} from 'node:crypto';
 import {
 	createAuthHarness,
-	createUniqueEmail,
 	createUniqueUsername,
 	fetchMe,
 	type LoginSuccessResponse,
@@ -22,18 +20,11 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function bootstrapRegistrationBody(prefix: string): Record<string, unknown> {
 	return {
-		email: createUniqueEmail(prefix),
 		username: createUniqueUsername(prefix),
+		password: 'a-strong-password',
 		global_name: 'Bootstrap Admin',
 		date_of_birth: '2000-01-01',
 		consent: true,
-	};
-}
-
-function bootstrapRegistrationBodyWithDnsEmail(prefix: string): Record<string, unknown> {
-	return {
-		...bootstrapRegistrationBody(prefix),
-		email: `${prefix}-${randomUUID()}@gmail.com`,
 	};
 }
 
@@ -74,9 +65,7 @@ describe('Auth registration', () => {
 		await harness?.shutdown();
 	});
 	it('returns token and user_id', async () => {
-		const email = createUniqueEmail('register');
 		const reg = await registerUser(harness, {
-			email,
 			username: createUniqueUsername('register'),
 			global_name: 'Register User',
 			password: 'a-strong-password',
@@ -88,8 +77,8 @@ describe('Auth registration', () => {
 	});
 	it('grants wildcard admin ACL to first accepted local dev registration', async () => {
 		await withBootstrapAdminConfig({selfHosted: false, testModeEnabled: false}, async () => {
-			const first = await registerUser(harness, bootstrapRegistrationBodyWithDnsEmail('localdevadminone'));
-			const second = await registerUser(harness, bootstrapRegistrationBodyWithDnsEmail('localdevadmintwo'));
+			const first = await registerUser(harness, bootstrapRegistrationBody('localdevadminone'));
+			const second = await registerUser(harness, bootstrapRegistrationBody('localdevadmintwo'));
 			await expectUserACLs(first.user_id, [AdminACLs.WILDCARD]);
 			await expectUserACLs(second.user_id, []);
 			await expect(getInstanceConfigRepository().isAdminBootstrapped()).resolves.toBe(true);
@@ -151,7 +140,6 @@ describe('Auth registration', () => {
 	it('allows emoji global name', async () => {
 		const globalName = '🌻 Sunflower';
 		const reg = await registerUser(harness, {
-			email: createUniqueEmail('global-name-emoji'),
 			username: createUniqueUsername('globalnameemoji'),
 			global_name: globalName,
 			password: 'a-strong-password',
@@ -163,7 +151,6 @@ describe('Auth registration', () => {
 	});
 	it('derives username from display name when username is omitted', async () => {
 		const reg = await registerUser(harness, {
-			email: createUniqueEmail('derived-username'),
 			password: 'a-strong-password',
 			global_name: 'Magic Tester',
 			date_of_birth: '2000-01-01',
@@ -188,7 +175,6 @@ describe('Auth registration', () => {
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('weak-password'),
 				username: 'itest',
 				global_name: 'Test User',
 				password: 'weak',
@@ -244,7 +230,6 @@ describe('Auth registration', () => {
 			{
 				name: 'missing username',
 				body: {
-					email: 'integration-missing-username@example.com',
 					username: '',
 					global_name: 'Test User',
 					password: 'a-strong-password',
@@ -255,7 +240,6 @@ describe('Auth registration', () => {
 			{
 				name: 'missing password',
 				body: {
-					email: 'integration-missing-password@example.com',
 					username: 'itest',
 					global_name: 'Test User',
 					password: '',
@@ -266,7 +250,6 @@ describe('Auth registration', () => {
 			{
 				name: 'missing date of birth',
 				body: {
-					email: 'integration-missing-dob@example.com',
 					username: 'itest',
 					global_name: 'Test User',
 					password: 'a-strong-password',
@@ -280,11 +263,10 @@ describe('Auth registration', () => {
 		}
 	});
 	it('allows login after registration', async () => {
-		const email = createUniqueEmail('login');
+		const username = createUniqueUsername('loginuser');
 		const password = 'a-strong-password';
 		const reg = await registerUser(harness, {
-			email,
-			username: createUniqueUsername('loginuser'),
+			username,
 			global_name: 'Login User',
 			password,
 			date_of_birth: '2000-01-01',
@@ -292,7 +274,7 @@ describe('Auth registration', () => {
 		});
 		const login = await createBuilderWithoutAuth<LoginSuccessResponse>(harness)
 			.post('/auth/login')
-			.body({email, password})
+			.body({email: username, password})
 			.execute();
 		expect('mfa' in login).toBe(false);
 		expect(login.token.length).toBeGreaterThan(0);
@@ -304,7 +286,6 @@ describe('Auth registration', () => {
 			await createBuilderWithoutAuth(harness)
 				.post('/auth/register')
 				.body({
-					email: createUniqueEmail('tor-register'),
 					username: createUniqueUsername('torregister'),
 					global_name: 'Tor Register',
 					password: 'a-strong-password',

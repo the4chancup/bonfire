@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, createUniqueEmail} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {sendMessageWithAttachments, setupTestGuildAndChannel} from '@app/api/channel/tests/AttachmentTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
@@ -116,7 +116,6 @@ describe('User profile text validation', () => {
 		await createBuilder(harness, '')
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('blocked-username'),
 				username: 'blockedsluguser',
 				global_name: TEST_USER_DATA.DEFAULT_GLOBAL_NAME,
 				password: TEST_CREDENTIALS.STRONG_PASSWORD,
@@ -128,7 +127,6 @@ describe('User profile text validation', () => {
 		await createBuilder(harness, '')
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail('blocked-display'),
 				username: 'allowedregistrationuser',
 				global_name: 'BlockedSlug Display',
 				password: TEST_CREDENTIALS.STRONG_PASSWORD,

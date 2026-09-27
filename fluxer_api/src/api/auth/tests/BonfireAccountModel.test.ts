@@ -19,6 +19,7 @@ import {
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface ValidationErrorResponse {
@@ -270,6 +271,66 @@ describe('Bonfire account model', () => {
 				.expect(200)
 				.execute();
 			expect(message.id).toBeTruthy();
+		});
+	});
+
+	describe('report resolution', () => {
+		it('delivers a system DM to an email-less reporter when an admin resolves with a public comment', async () => {
+			const reporter = await createTestAccount(harness);
+			const targetUser = await createTestAccount(harness);
+			const admin = await setUserACLs(harness, await createTestAccount(harness), [
+				'admin:authenticate',
+				'report:resolve',
+			]);
+			const report = await createBuilder<{report_id: string}>(harness, reporter.token)
+				.post('/reports/user')
+				.body({user_id: targetUser.userId, category: 'harassment'})
+				.expect(200)
+				.execute();
+			await createBuilder(harness, admin.token)
+				.patch(`/admin/reports/${report.report_id}`)
+				.body({status: 'resolved', public_comment: 'We actioned the account.'})
+				.expect(200)
+				.execute();
+			const channels = await createBuilder<Array<{id: string; recipients?: Array<{id: string}>}>>(
+				harness,
+				reporter.token,
+			)
+				.get('/users/@me/channels')
+				.expect(200)
+				.execute();
+			const systemChannels = channels.filter((channel) => channel.recipients?.some((r) => r.id === '0'));
+			const messages = (
+				await Promise.all(
+					systemChannels.map((channel) =>
+						createBuilder<Array<{id: string; content: string | null}>>(harness, reporter.token)
+							.get(`/channels/${channel.id}/messages?limit=50`)
+							.expect(200)
+							.execute(),
+					),
+				)
+			).flat();
+			expect(messages).toHaveLength(1);
+			expect(messages[0]?.content).toBeTruthy();
+		});
+	});
+
+	describe('moderation deletion', () => {
+		it('schedules deletion for an email-less user and invalidates their sessions', async () => {
+			const admin = await setUserACLs(harness, await createTestAccount(harness), [
+				'admin:authenticate',
+				'user:delete',
+			]);
+			const target = await createTestAccount(harness);
+			const before = await harness.requestJson({path: '/users/@me', headers: {Authorization: target.token}});
+			expect(before.status).toBe(200);
+			await createBuilder(harness, admin.token)
+				.put(`/admin/users/${target.userId}/deletion`)
+				.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
+				.expect(200)
+				.execute();
+			const after = await harness.requestJson({path: '/users/@me', headers: {Authorization: target.token}});
+			expect(after.status).toBe(401);
 		});
 	});
 });
