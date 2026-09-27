@@ -59,7 +59,7 @@ const VERIFICATION_LEVEL_LOW_NAME_DESCRIPTOR = msg({
 		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
 });
 const VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Requires a verified email address.',
+	message: 'Requires a registered account with a password.',
 	comment: 'Helper text for the "Low" member verification level option in the community moderation settings tab.',
 });
 const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
@@ -68,7 +68,7 @@ const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
 		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
 });
 const VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR = msg({
-	message: "Requires a verified email address and an account that's at least 5 minutes old.",
+	message: "Requires a registered account that's at least 5 minutes old.",
 	comment: 'Helper text for the "Medium" member verification level option in the community moderation settings tab.',
 });
 const VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR = msg({

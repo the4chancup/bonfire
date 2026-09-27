@@ -40,6 +40,12 @@ export const DataExportTabContent: React.FC = observer(() => {
 			.catch(() => setLatestHarvest(null));
 	}, []);
 	useEffect(refreshHarvest, [refreshHarvest]);
+	const harvestInProgress = latestHarvest?.status === 'pending' || latestHarvest?.status === 'processing';
+	useEffect(() => {
+		if (!harvestInProgress) return;
+		const timer = setInterval(refreshHarvest, 10_000);
+		return () => clearInterval(timer);
+	}, [harvestInProgress, refreshHarvest]);
 	const handleOpen = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
@@ -54,7 +60,14 @@ export const DataExportTabContent: React.FC = observer(() => {
 	const handleDownload = useCallback(
 		(harvestId: string) => {
 			UserCommands.getHarvestDownloadUrl(harvestId)
-				.then(({download_url}) => window.open(download_url, '_blank', 'noopener'))
+				.then(({download_url}) => {
+					const anchor = document.createElement('a');
+					anchor.href = download_url;
+					anchor.download = '';
+					document.body.appendChild(anchor);
+					anchor.click();
+					anchor.remove();
+				})
 				.catch((error) => FormUtils.pushApiErrorModal(i18n, error));
 		},
 		[i18n],
@@ -62,7 +75,6 @@ export const DataExportTabContent: React.FC = observer(() => {
 	const harvestDownloadable =
 		latestHarvest?.status === 'completed' &&
 		(latestHarvest.expires_at === null || new Date(latestHarvest.expires_at).getTime() > Date.now());
-	const harvestInProgress = latestHarvest?.status === 'pending' || latestHarvest?.status === 'processing';
 	return (
 		<div
 			className={styles.deleteSection}

@@ -25,7 +25,7 @@ const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 	comment: 'IAR modal: title of the account-not-ready notice.',
 });
 const CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR = msg({
-	message: 'Claim your account and verify your email to send reports.',
+	message: 'Finish claiming your account to send reports.',
 	comment: 'IAR modal: body of the account-not-ready notice.',
 });
 const WHICH_AREA_DESCRIPTOR = msg({
@@ -94,7 +94,7 @@ const REPORT_SENT_TITLE_DESCRIPTOR = msg({
 	comment: 'IAR modal: title on the success step shown after a platform report is submitted.',
 });
 const REPORT_SENT_BODY_DESCRIPTOR = msg({
-	message: "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict.",
+	message: "Our safety team is reviewing it. We'll send you a DM once we've reached a verdict.",
 	comment:
 		'IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.',
 });
