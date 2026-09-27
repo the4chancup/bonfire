@@ -111,7 +111,7 @@ describe('WebAuthn MFA Consistency Tests', () => {
 		const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
 			.post('/auth/login')
 			.body({
-				email: account.email,
+				email: account.username,
 				password: account.password,
 			})
 			.execute();
@@ -124,7 +124,7 @@ describe('WebAuthn MFA Consistency Tests', () => {
 		const login = await createBuilderWithoutAuth<LoginSuccessResponse | LoginMfaResponse>(harness)
 			.post('/auth/login')
 			.body({
-				email: account.email,
+				email: account.username,
 				password: account.password,
 			})
 			.execute();

@@ -290,6 +290,22 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	},
 	{
 		method: 'POST',
+		route: '/admin/users/:user_id/temporary-password',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {path: `/admin/users/${target.userId}/temporary-password`, expectStatus: 200},
+				expected: {
+					action: 'set_temporary_password',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
 		route: '/admin/users/:user_id/password-reset',
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);

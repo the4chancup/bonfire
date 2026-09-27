@@ -28,7 +28,7 @@ describe('Auth login and sessions', () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: 'WrongPassword123!'})
+			.body({email: account.username, password: 'WrongPassword123!'})
 			.expect(400)
 			.execute();
 		await createBuilderWithoutAuth(harness)

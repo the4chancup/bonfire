@@ -53,7 +53,7 @@ async function enableTotp(harness: ApiTestHarness, account: TestAccount, secret:
 }
 
 async function startMfaLogin(harness: ApiTestHarness, account: TestAccount): Promise<string> {
-	const login = (await loginUser(harness, {email: account.email, password: account.password})) as LoginMfaResponse;
+	const login = (await loginUser(harness, {email: account.username, password: account.password})) as LoginMfaResponse;
 	expect(login.mfa).toBe(true);
 	expect(login.ticket).toBeTruthy();
 	return login.ticket;

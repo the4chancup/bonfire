@@ -139,7 +139,7 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(targetLog!.metadata.get('reason_code')).toBe(DeletionReasons.SPAM.toString());
 		expect(targetLog!.metadata.get('days')).toBe('60');
 		expect(await isSessionAlive(harness, target.token)).toBe(false);
-		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(true);
+		expect(await new AdminRepository().isEmailBanned(target.email!)).toBe(true);
 		const resolutionLogs = await listAuditLogs('auto_resolve_reports_on_deletion');
 		expect(resolutionLogs.some((log) => log.targetId === BigInt(target.userId))).toBe(true);
 		const summaryLogs = await listAuditLogs('bulk_schedule_deletion');
@@ -172,7 +172,7 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(targetLog!.auditLogReason).toBe(AUDIT_LOG_REASON);
 		expect(targetLog!.metadata.get('reason_code')).toBe(DeletionReasons.SPAM.toString());
 		expect(await isSessionAlive(harness, target.token)).toBe(false);
-		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(true);
+		expect(await new AdminRepository().isEmailBanned(target.email!)).toBe(true);
 	});
 	test('keeps deleting the remaining users after one of them fails and reports the failure', async () => {
 		const admin = await createTestAccount(harness);
@@ -208,7 +208,7 @@ describe('bulkScheduleUserDeletion', () => {
 		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.USER_REQUESTED);
 		expect(result.successful_count).toBe(1);
 		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
-		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(false);
+		expect(await new AdminRepository().isEmailBanned(target.email!)).toBe(false);
 		const perUserLogs = await listAuditLogs('schedule_deletion');
 		expect(perUserLogs.filter((log) => log.targetId === BigInt(target.userId))).toHaveLength(1);
 	});

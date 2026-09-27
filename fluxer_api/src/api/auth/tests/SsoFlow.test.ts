@@ -81,7 +81,7 @@ describe('Auth SSO flow', () => {
 			}>(harness)
 				.post('/auth/login')
 				.body({
-					email: admin.email,
+					email: admin.username,
 					password: admin.password,
 				})
 				.execute();

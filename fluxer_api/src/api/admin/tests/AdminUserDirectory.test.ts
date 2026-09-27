@@ -105,7 +105,7 @@ describe('Admin user directory', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_IP]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users?email=${encodeURIComponent(target.email)}`)
+				.get(`/admin/users?email=${encodeURIComponent(target.email!)}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
@@ -114,7 +114,7 @@ describe('Admin user directory', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL]);
 			const target = await createTestAccount(harness);
 			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?email=${encodeURIComponent(target.email)}`)
+				.get(`/admin/users?email=${encodeURIComponent(target.email!)}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users.map((user) => user.id)).toEqual([target.userId]);
@@ -146,7 +146,7 @@ describe('Admin user directory', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_IP]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users?resolve=${encodeURIComponent(target.email)}`)
+				.get(`/admin/users?resolve=${encodeURIComponent(target.email!)}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
@@ -155,7 +155,7 @@ describe('Admin user directory', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL]);
 			const target = await createTestAccount(harness);
 			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?resolve=${encodeURIComponent(target.email)}`)
+				.get(`/admin/users?resolve=${encodeURIComponent(target.email!)}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users.map((user) => user.id)).toEqual([target.userId]);

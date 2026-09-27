@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createAuthHarness, createUniqueEmail, createUniqueUsername} from '@app/api/auth/tests/AuthTestUtils';
+import {createAuthHarness, createUniqueUsername} from '@app/api/auth/tests/AuthTestUtils';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -19,7 +19,6 @@ interface RegistrationTokenResponse {
 
 function registrationBody(prefix: string): Record<string, unknown> {
 	return {
-		email: createUniqueEmail(prefix),
 		username: createUniqueUsername(prefix),
 		global_name: 'Registration Policy',
 		password: 'a-strong-password',
@@ -86,7 +85,7 @@ describe('Auth registration policy', () => {
 		expect(registration.user_id.length).toBeGreaterThan(0);
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
-			.body({email: body.email, password: body.password})
+			.body({email: body.username, password: body.password})
 			.expect(403, APIErrorCodes.REGISTRATION_PENDING_APPROVAL)
 			.execute();
 	});

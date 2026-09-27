@@ -180,7 +180,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		test('returns the backup codes issued when TOTP was enabled', async () => {
 			const {account, backupCodes} = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const result = await verifyChallenge(harness, account.token, startResult.ticket, code);
 			expect(result.backup_codes.length).toBe(backupCodes.length);
 			expect(result.backup_codes.map((backupCode) => backupCode.code).sort()).toEqual([...backupCodes].sort());
@@ -205,7 +205,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		test('accepts a code with different case and without dashes', async () => {
 			const {account, backupCodes} = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const mangled = code.toLowerCase().replaceAll('-', '');
 			expect(mangled).not.toBe(code);
 			const result = await verifyChallenge(harness, account.token, startResult.ticket, mangled);
@@ -214,7 +214,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		test('consumes the emailed code so it cannot be verified twice', async () => {
 			const {account} = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const first = await verifyChallenge(harness, account.token, startResult.ticket, code);
 			expect(first.verification_proof).toBeTruthy();
 			const {json} = await createBuilder(harness, account.token)
@@ -237,7 +237,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 			const owner = await createTotpAccount(harness);
 			const other = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, owner.account.token);
-			const code = await getChallengeCode(harness, owner.account.email);
+			const code = await getChallengeCode(harness, owner.account.email!);
 			const {json} = await createBuilder(harness, other.account.token)
 				.post('/users/@me/mfa/backup-codes/challenge/verify')
 				.body({ticket: startResult.ticket, code})
@@ -259,7 +259,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		test('replaces the backup codes using the verification proof', async () => {
 			const {account, backupCodes} = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const verified = await verifyChallenge(harness, account.token, startResult.ticket, code);
 			const regenerated = await regenerateWithChallenge(
 				harness,
@@ -277,7 +277,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		test('rejects an incorrect verification proof', async () => {
 			const {account, backupCodes} = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const verified = await verifyChallenge(harness, account.token, startResult.ticket, code);
 			const wrongProof = `${verified.verification_proof.slice(0, -1)}${verified.verification_proof.endsWith('a') ? 'b' : 'a'}`;
 			const {json} = await createBuilder(harness, account.token)
@@ -314,7 +314,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 			const owner = await createTotpAccount(harness);
 			const other = await createTotpAccount(harness);
 			const startResult = await startChallenge(harness, owner.account.token);
-			const code = await getChallengeCode(harness, owner.account.email);
+			const code = await getChallengeCode(harness, owner.account.email!);
 			const verified = await verifyChallenge(harness, owner.account.token, startResult.ticket, code);
 			const {json} = await createBuilder(harness, other.account.token)
 				.post('/users/@me/mfa/backup-codes/challenge/regenerate')
@@ -337,7 +337,7 @@ describe('MfaBackupCodesChallengeFlow', () => {
 			const secret = createTotpSecret();
 			const backupCodes = await enableTotpWithSecret(harness, account, secret);
 			const startResult = await startChallenge(harness, account.token);
-			const code = await getChallengeCode(harness, account.email);
+			const code = await getChallengeCode(harness, account.email!);
 			const verified = await verifyChallenge(harness, account.token, startResult.ticket, code);
 			await createBuilder(harness, account.token)
 				.post('/users/@me/mfa/totp/disable')

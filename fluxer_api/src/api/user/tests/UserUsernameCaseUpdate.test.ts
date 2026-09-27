@@ -13,7 +13,7 @@ async function runCaseUpdateTest(
 		account: {
 			userId: string;
 			token: string;
-			email: string;
+			username: string;
 			password: string;
 		};
 		initialUser: {

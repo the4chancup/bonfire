@@ -33,7 +33,7 @@ describe('Auth MFA TOTP flag matches authenticator types', () => {
 			ticket: string;
 		}>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.execute();
 		expect(totpLogin.ticket).toBeDefined();
 		const totpResp = await createBuilderWithoutAuth<{
@@ -57,7 +57,7 @@ describe('Auth MFA TOTP flag matches authenticator types', () => {
 			user_id: string;
 		}>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.execute();
 		expect('mfa' in loginResp).toBe(false);
 		expect(loginResp.token).toBeDefined();

@@ -43,12 +43,12 @@ export interface TestEmailRecord {
 }
 
 export interface TestAccount {
-	email: string;
+	email?: string;
 	password: string;
 	userId: string;
 	token: string;
 	ipAddress?: string;
-	username?: string;
+	username: string;
 }
 
 interface CreateTestAccountParams {
@@ -90,14 +90,13 @@ export async function createTestAccount(
 	harness: ApiTestHarness,
 	params?: CreateTestAccountParams,
 ): Promise<TestAccount> {
-	const email = params?.email ?? createUniqueEmail('account');
 	const password = params?.password ?? TEST_CREDENTIALS.STRONG_PASSWORD;
 	const username = params?.username ?? createUniqueUsername('account');
 	const ipAddress = params?.ipAddress;
 	const registrationBuilder = createBuilder<RegisterResponse>(harness, '')
 		.post('/auth/register')
 		.body({
-			email,
+			...(params?.email !== undefined ? {email: params.email} : {}),
 			username,
 			global_name: params?.globalName ?? TEST_USER_DATA.DEFAULT_GLOBAL_NAME,
 			password,
@@ -130,7 +129,7 @@ export async function createTestAccount(
 		}
 		await securityFlagsBuilder.execute();
 	}
-	return {email, password, userId: reg.user_id, token: reg.token, username, ipAddress};
+	return {email: params?.email, password, userId: reg.user_id, token: reg.token, username, ipAddress};
 }
 
 export async function loginUser(
@@ -154,7 +153,7 @@ export async function loginUser(
 export async function loginAccount(harness: ApiTestHarness, account: TestAccount): Promise<TestAccount> {
 	const login = await loginUser(
 		harness,
-		{email: account.email, password: account.password},
+		{email: account.username, password: account.password},
 		{ipAddress: account.ipAddress},
 	);
 	if ('mfa' in login) {
@@ -341,7 +340,7 @@ export async function disableSso(harness: ApiTestHarness, token: string): Promis
 }
 
 export async function createSessionFromLogin(harness: ApiTestHarness, account: TestAccount): Promise<string> {
-	const login = await loginUser(harness, {email: account.email, password: account.password});
+	const login = await loginUser(harness, {email: account.username, password: account.password});
 	if ('mfa' in login && login.mfa) {
 		throw new Error('Expected non-MFA login for test account');
 	}

@@ -62,7 +62,7 @@ async function enableTotpForAccount(harness: ApiTestHarness, account: TestAccoun
 }
 
 async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const login = await loginUser(harness, {email: account.email, password: account.password});
+	const login = await loginUser(harness, {email: account.username, password: account.password});
 	if (!('mfa' in login)) {
 		throw new Error('Expected MFA login');
 	}
@@ -224,7 +224,7 @@ describe('Sudo mode negative cases', () => {
 				})
 				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
-			const login = await loginUser(harness, {email: account.email, password: account.password});
+			const login = await loginUser(harness, {email: account.username, password: account.password});
 			if ('mfa' in login && login.mfa) {
 				throw new Error('Expected non-MFA login');
 			}

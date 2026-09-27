@@ -3,7 +3,6 @@
 import {
 	createAuthHarness,
 	createTestAccount,
-	createUniqueEmail,
 	createUniqueUsername,
 	fetchSettings,
 	registerUser,
@@ -35,7 +34,6 @@ describe('User settings defaults', () => {
 			).incoming_call_flags,
 		).toBe(incomingCallFriendsOnly);
 		const minorReg = await registerUser(harness, {
-			email: createUniqueEmail(),
 			username: createUniqueUsername(),
 			global_name: 'Minor Settings',
 			password: 'a-strong-password',

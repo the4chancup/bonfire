@@ -93,7 +93,7 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);
 			return {
-				request: {path: `/admin/users?resolve=${encodeURIComponent(target.email)}`},
+				request: {path: `/admin/users?resolve=${encodeURIComponent(`${target.username}#0000`)}`},
 				expected: {
 					action: 'search_users',
 					targetType: 'user',
@@ -114,7 +114,7 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);
 			return {
-				request: {path: `/admin/users?email=${encodeURIComponent(target.email)}&limit=10`},
+				request: {path: `/admin/users?email=${encodeURIComponent(target.email!)}&limit=10`},
 				expected: {
 					action: 'search_users',
 					targetType: 'user',

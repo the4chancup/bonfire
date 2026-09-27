@@ -2,7 +2,6 @@
 
 import {
 	createTestAccount,
-	createUniqueEmail,
 	createUniqueUsername,
 	setUserACLs,
 } from '@app/api/auth/tests/AuthTestUtils';
@@ -59,7 +58,6 @@ describe('pending registration audit logs', () => {
 		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail(status),
 				username: createUniqueUsername(status),
 				global_name: 'The register man',
 				password: 'approving-since-1999',

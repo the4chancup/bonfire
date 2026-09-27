@@ -42,7 +42,7 @@ describe('Auth security flags - suspicious activity flag blocks restricted route
 				suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL'],
 			})
 			.execute();
-		const login = await loginUser(harness, {email: account.email, password: account.password});
+		const login = await loginUser(harness, {email: account.username, password: account.password});
 		if ('mfa' in login) {
 			throw new Error('Expected non-MFA login for suspicious activity recovery test');
 		}

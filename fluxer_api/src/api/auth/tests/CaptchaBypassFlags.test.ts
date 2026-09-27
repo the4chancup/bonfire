@@ -2,7 +2,6 @@
 
 import {
 	createAuthHarness,
-	createUniqueEmail,
 	createUniqueUsername,
 	registerUser,
 } from '@app/api/auth/tests/AuthTestUtils';
@@ -29,12 +28,11 @@ async function withCaptchaEnabled<T>(run: () => Promise<T>): Promise<T> {
 async function registerAndFlag(
 	harness: ApiTestHarness,
 	flags: Array<string>,
-): Promise<{email: string; password: string; userId: string}> {
-	const email = createUniqueEmail('captcha-flags');
+): Promise<{username: string; password: string; userId: string}> {
 	const password = 'a-strong-password';
+	const username = createUniqueUsername('captchaflags');
 	const reg = await registerUser(harness, {
-		email,
-		username: createUniqueUsername('captchaflags'),
+		username,
 		global_name: 'Captcha Flags User',
 		password,
 		date_of_birth: '2000-01-01',
@@ -46,7 +44,7 @@ async function registerAndFlag(
 			.body({set_flags: flags})
 			.execute();
 	}
-	return {email, password, userId: reg.user_id};
+	return {username, password, userId: reg.user_id};
 }
 
 describe('Auth Captcha Bypass Flags', () => {
@@ -65,7 +63,7 @@ describe('Auth Captcha Bypass Flags', () => {
 		await withCaptchaEnabled(async () => {
 			const resp = await createBuilderWithoutAuth<{token?: string; user_id?: string}>(harness)
 				.post('/auth/login')
-				.body({email: account.email, password: account.password})
+				.body({email: account.username, password: account.password})
 				.execute();
 			expect(resp.token).toBeTruthy();
 			expect(resp.user_id).toBe(account.userId);
@@ -76,7 +74,7 @@ describe('Auth Captcha Bypass Flags', () => {
 		await withCaptchaEnabled(async () => {
 			await createBuilderWithoutAuth(harness)
 				.post('/auth/login')
-				.body({email: account.email, password: account.password})
+				.body({email: account.username, password: account.password})
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
 				.execute();
 		});

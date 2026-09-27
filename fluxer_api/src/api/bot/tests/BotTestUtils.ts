@@ -59,7 +59,7 @@ export async function createTestBotAccount(
 		botUserId: botApp.botUserId,
 		botToken: botApp.botToken,
 		clientSecret: botApp.clientSecret,
-		ownerEmail: owner.email,
+		ownerEmail: owner.username,
 		ownerPassword: owner.password,
 		ownerUserId: owner.userId,
 		ownerToken: owner.token,

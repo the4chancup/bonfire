@@ -95,7 +95,7 @@ describe('Auth reset password requires MFA', () => {
 			.body({secret, code: totpCodeNow(secret), password: account.password})
 			.execute();
 		await createBuilderWithoutAuth(harness).post('/auth/forgot').body({email: account.email}).expect(204).execute();
-		const email = await waitForEmail(harness, 'password_reset', account.email);
+		const email = await waitForEmail(harness, 'password_reset', account.email!);
 		const token = email.metadata['token'];
 		expect(token).toBeDefined();
 		const newPassword = 'new-strong-password-123';
@@ -134,7 +134,7 @@ describe('Auth reset password requires MFA', () => {
 		await registerWebAuthnCredential(harness, account.token, device, () => ({password: account.password}));
 		await clearTestEmails(harness);
 		await createBuilderWithoutAuth(harness).post('/auth/forgot').body({email: account.email}).expect(204).execute();
-		const email = await waitForEmail(harness, 'password_reset', account.email);
+		const email = await waitForEmail(harness, 'password_reset', account.email!);
 		const token = email.metadata['token'];
 		expect(token).toBeDefined();
 		const resetResp = await createBuilderWithoutAuth<LoginSuccessResponse | MfaRequiredResponse>(harness)
@@ -151,7 +151,7 @@ describe('Auth reset password requires MFA', () => {
 		await setWebAuthnTwoFactor(harness, account.token, true, {password: account.password});
 		await clearTestEmails(harness);
 		await createBuilderWithoutAuth(harness).post('/auth/forgot').body({email: account.email}).expect(204).execute();
-		const email = await waitForEmail(harness, 'password_reset', account.email);
+		const email = await waitForEmail(harness, 'password_reset', account.email!);
 		const token = email.metadata['token'];
 		expect(token).toBeDefined();
 		const resetResp = await createBuilderWithoutAuth<MfaRequiredResponse>(harness)
@@ -186,7 +186,7 @@ describe('Auth reset password requires MFA', () => {
 		const account = await claimEmailWithoutPassword(harness, base);
 		const device = createWebAuthnDevice();
 		await registerWebAuthnCredential(harness, account.token, device, () => ({}));
-		const token = await requestPasswordReset(harness, account.email);
+		const token = await requestPasswordReset(harness, account.email!);
 		const resetResp = await createBuilderWithoutAuth<MfaRequiredResponse>(harness)
 			.post('/auth/reset')
 			.body({token, password: 'new-strong-password-123'})
@@ -222,12 +222,12 @@ describe('Auth reset password requires MFA', () => {
 		const account = await claimEmailWithoutPassword(harness, base);
 		const device = createWebAuthnDevice();
 		await registerWebAuthnCredential(harness, account.token, device, () => ({}));
-		const firstToken = await requestPasswordReset(harness, account.email);
+		const firstToken = await requestPasswordReset(harness, account.email!);
 		await createBuilderWithoutAuth<MfaRequiredResponse>(harness)
 			.post('/auth/reset')
 			.body({token: firstToken, password: 'new-strong-password-123'})
 			.execute();
-		const secondToken = await requestPasswordReset(harness, account.email);
+		const secondToken = await requestPasswordReset(harness, account.email!);
 		const secondReset = await createBuilderWithoutAuth<MfaRequiredResponse>(harness)
 			.post('/auth/reset')
 			.body({token: secondToken, password: 'another-strong-password-456'})

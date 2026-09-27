@@ -88,7 +88,7 @@ describe('WebAuthn two-factor backup codes', () => {
 		await registerWebAuthnCredential(harness, account.token, device, () => ({password: account.password}));
 		const enabled = await setWebAuthnTwoFactor(harness, account.token, true, {password: account.password});
 		const login = (await loginUser(harness, {
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})) as LoginMfaResponse;
 		expect(login.mfa).toBe(true);

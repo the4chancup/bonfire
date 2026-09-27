@@ -167,7 +167,7 @@ describe('Admin Deletion Queue', () => {
 			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
+			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email!)}`)
 			.execute();
 		expect(ipBan.banned).toBe(false);
 		expect(emailBan.banned).toBe(false);
@@ -187,7 +187,7 @@ describe('Admin Deletion Queue', () => {
 			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
+			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email!)}`)
 			.execute();
 		const suspiciousIp = await new CassandraSuspiciousIpRepository().findActiveByIp(targetIp);
 		expect(ipBan.banned).toBe(false);

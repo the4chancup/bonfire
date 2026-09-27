@@ -34,7 +34,7 @@ async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secr
 	>(harness)
 		.post('/auth/login')
 		.body({
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})
 		.execute();

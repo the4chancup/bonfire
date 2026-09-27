@@ -37,7 +37,7 @@ describe('Auth login self deleted recovery', () => {
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
 			.body({
-				email: account.email,
+				email: account.username,
 				password: account.password,
 			})
 			.expect(200)

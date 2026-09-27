@@ -2,7 +2,6 @@
 
 import type {AdminAuditCoverageCase} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
 import {
-	createUniqueEmail,
 	createUniqueUsername,
 	registerUser,
 	type TestAccount,
@@ -153,7 +152,6 @@ export const InstanceConfigAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase
 		async prepare({harness}) {
 			await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
 			const pending = await registerUser(harness, {
-				email: createUniqueEmail('coverage-pending'),
 				username: createUniqueUsername('coveragepending'),
 				global_name: 'Coverage Pending',
 				password: 'coverage-pending-password',

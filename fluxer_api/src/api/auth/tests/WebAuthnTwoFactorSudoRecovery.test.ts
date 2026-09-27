@@ -104,7 +104,7 @@ describe('Sudo mode recovery for passkey two-factor accounts without TOTP', () =
 		const me = await fetchMe(harness, account.token);
 		expect(me.authenticator_types).toEqual([]);
 		expect(me.mfa_enabled).toBe(false);
-		const login = await loginUser(harness, {email: account.email, password: account.password});
+		const login = await loginUser(harness, {email: account.username, password: account.password});
 		expect('mfa' in login).toBe(false);
 	});
 	it('advertises the backup code option in the sudo methods endpoint and the sudo mode challenge alike', async () => {

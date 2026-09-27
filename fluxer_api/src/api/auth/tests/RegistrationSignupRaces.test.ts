@@ -38,7 +38,6 @@ interface RegistrationResponse {
 
 function registrationBody(prefix: string, registrationUrlCode?: string): Record<string, unknown> {
 	return {
-		email: createUniqueEmail(prefix),
 		username: createUniqueUsername(prefix),
 		global_name: 'Signup Race',
 		password: 'a-strong-password',

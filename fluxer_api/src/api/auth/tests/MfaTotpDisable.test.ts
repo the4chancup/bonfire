@@ -52,7 +52,7 @@ async function enableTotp(harness: ApiTestHarness, account: TestAccount, secret:
 async function loginRequiresMfa(harness: ApiTestHarness, account: TestAccount): Promise<boolean> {
 	const login = await createBuilderWithoutAuth<{mfa?: boolean}>(harness)
 		.post('/auth/login')
-		.body({email: account.email, password: account.password})
+		.body({email: account.username, password: account.password})
 		.execute();
 	return login.mfa === true;
 }

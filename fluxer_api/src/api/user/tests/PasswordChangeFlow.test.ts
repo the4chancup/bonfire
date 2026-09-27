@@ -77,7 +77,7 @@ async function runFullVerification(
 	verificationProof: string;
 }> {
 	const startResult = await startPasswordChange(harness, account.token);
-	const code = await getVerificationCode(harness, account.email);
+	const code = await getVerificationCode(harness, account.email!);
 	const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 	return {ticket: startResult.ticket, verificationProof: verifyResult.verification_proof};
 }
@@ -144,7 +144,7 @@ describe('PasswordChangeFlow', () => {
 		test('returns verification_proof with correct code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
-			const code = await getVerificationCode(harness, account.email);
+			const code = await getVerificationCode(harness, account.email!);
 			const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 			expect(verifyResult.verification_proof).toBeDefined();
 			expect(typeof verifyResult.verification_proof).toBe('string');
@@ -176,7 +176,7 @@ describe('PasswordChangeFlow', () => {
 		test('returns same proof on repeated verification with correct code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
-			const code = await getVerificationCode(harness, account.email);
+			const code = await getVerificationCode(harness, account.email!);
 			const firstVerify = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 			const secondVerify = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 			expect(firstVerify.verification_proof).toBe(secondVerify.verification_proof);
@@ -246,7 +246,7 @@ describe('PasswordChangeFlow', () => {
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
 			const freshLogin = await loginUser(harness, {
-				email: account.email,
+				email: account.username,
 				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
 			});
 			if ('mfa' in freshLogin) {
@@ -271,7 +271,7 @@ describe('PasswordChangeFlow', () => {
 			const account = await createTestAccount(harness);
 			const originalToken = account.token;
 			const otherLogin = await loginUser(harness, {
-				email: account.email,
+				email: account.username,
 				password: account.password,
 			});
 			if ('mfa' in otherLogin) {
@@ -301,7 +301,7 @@ describe('PasswordChangeFlow', () => {
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
 			const login = await loginUser(harness, {
-				email: account.email,
+				email: account.username,
 				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
 			});
 			expect('token' in login).toBe(true);
@@ -313,7 +313,7 @@ describe('PasswordChangeFlow', () => {
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
 			await createBuilderWithoutAuth(harness)
 				.post('/auth/login')
-				.body({email: account.email, password: TEST_CREDENTIALS.STRONG_PASSWORD})
+				.body({email: account.username, password: TEST_CREDENTIALS.STRONG_PASSWORD})
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 		});
@@ -335,7 +335,7 @@ describe('PasswordChangeFlow', () => {
 			const startResult = await startPasswordChange(harness, account.token);
 			expect(startResult.ticket).toBeDefined();
 			expect(startResult.code_expires_at).toBeDefined();
-			const code = await getVerificationCode(harness, account.email);
+			const code = await getVerificationCode(harness, account.email!);
 			expect(code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
 			const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 			expect(verifyResult.verification_proof).toBeDefined();
@@ -347,7 +347,7 @@ describe('PasswordChangeFlow', () => {
 				TEST_CREDENTIALS.ALT_PASSWORD_1,
 			);
 			const login = await loginUser(harness, {
-				email: account.email,
+				email: account.username,
 				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
 			});
 			expect('token' in login).toBe(true);

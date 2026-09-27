@@ -43,7 +43,7 @@ describe('Password reset flow', () => {
 			.body({token, password: newPassword})
 			.execute();
 		expect(resetResp.token.length).toBeGreaterThan(0);
-		const login = await loginUser(harness, {email: account.email, password: newPassword});
+		const login = await loginUser(harness, {email: account.username, password: newPassword});
 		if ('mfa' in login && login.mfa) {
 			throw new Error('Expected non-MFA login');
 		}

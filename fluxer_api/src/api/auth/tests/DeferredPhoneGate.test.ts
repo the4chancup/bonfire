@@ -4,7 +4,6 @@ import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrat
 import {
 	createAuthHarness,
 	createTestAccount,
-	createUniqueEmail,
 	createUniqueUsername,
 	loginAccount,
 	registerUser,
@@ -125,7 +124,6 @@ describe('Deferred phone verification gate', () => {
 		await getInstanceConfigRepository().setInstancePolicyConfig({deferred_phone_gate_enabled: false});
 		setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('gate-off'),
 			username: createUniqueUsername('gate_off'),
 			global_name: 'Gate Off',
 			password: 'StrongPassword!123',
@@ -141,7 +139,6 @@ describe('Deferred phone verification gate', () => {
 		await getInstanceConfigRepository().setInstancePolicyConfig({deferred_phone_gate_enabled: true});
 		setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('gate-on'),
 			username: createUniqueUsername('gate_on'),
 			global_name: 'Gate On',
 			password: 'StrongPassword!123',
@@ -163,7 +160,6 @@ describe('Deferred phone verification gate', () => {
 		const {guildId, inviteCode} = await createGuildWithInvite(harness);
 		setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('gate-small'),
 			username: createUniqueUsername('gate_small'),
 			global_name: 'Gate Small',
 			password: 'StrongPassword!123',
@@ -201,7 +197,6 @@ describe('Deferred phone verification gate', () => {
 			},
 		});
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('gate-inbound'),
 			username: createUniqueUsername('gate_inbound'),
 			global_name: 'Gate Inbound',
 			password: 'StrongPassword!123',
@@ -225,7 +220,6 @@ describe('Deferred phone verification gate', () => {
 
 		setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('gate-qualifying'),
 			username: createUniqueUsername('gate_qualifying'),
 			global_name: 'Gate Qualifying',
 			password: 'StrongPassword!123',
@@ -253,7 +247,6 @@ describe('Deferred phone verification gate', () => {
 			Config.abusePolicy.phoneFlagging = {enabled: false, exemptCountryCodes: []};
 			setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 			const registration = await registerUser(harness, {
-				email: createUniqueEmail('flagging-off'),
 				username: createUniqueUsername('flagging_off'),
 				global_name: 'Flagging Off',
 				password: 'StrongPassword!123',
@@ -276,7 +269,6 @@ describe('Deferred phone verification gate', () => {
 			await createBuilder(harness, filler.token).post(`/invites/${inviteCode}`).expect(200).execute();
 			setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 			const registration = await registerUser(harness, {
-				email: createUniqueEmail('flagging-off-join'),
 				username: createUniqueUsername('flagging_off_join'),
 				global_name: 'Flagging Off Join',
 				password: 'StrongPassword!123',
@@ -316,7 +308,6 @@ describe('Deferred phone verification gate', () => {
 		async function registerDeferredUser(prefix: string): Promise<EscapeSubject> {
 			setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
 			const registration = await registerUser(harness, {
-				email: createUniqueEmail(prefix),
 				username: createUniqueUsername(prefix),
 				global_name: 'Gate Escape',
 				password: 'StrongPassword!123',

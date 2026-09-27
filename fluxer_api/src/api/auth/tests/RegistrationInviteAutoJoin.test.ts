@@ -4,7 +4,6 @@ import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrat
 import {
 	createAuthHarness,
 	createTestAccount,
-	createUniqueEmail,
 	createUniqueUsername,
 	loginAccount,
 	registerUser,
@@ -110,7 +109,6 @@ describe('Auth registration invite auto-join risk gating', () => {
 			}),
 		);
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('invite-medium'),
 			username: createUniqueUsername('invite_medium'),
 			global_name: 'Invite Medium',
 			password: 'StrongPassword!123',
@@ -134,7 +132,6 @@ describe('Auth registration invite auto-join risk gating', () => {
 			}),
 		);
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('invite-high'),
 			username: createUniqueUsername('invite_high'),
 			global_name: 'Invite High',
 			password: 'StrongPassword!123',
@@ -158,7 +155,6 @@ describe('Auth registration invite auto-join risk gating', () => {
 			}),
 		);
 		const registration = await registerUser(harness, {
-			email: createUniqueEmail('invite-veryhigh'),
 			username: createUniqueUsername('invite_veryhigh'),
 			global_name: 'Invite VeryHigh',
 			password: 'StrongPassword!123',

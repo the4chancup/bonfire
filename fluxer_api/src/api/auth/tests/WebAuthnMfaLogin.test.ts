@@ -50,7 +50,7 @@ describe('WebAuthn MFA login', () => {
 			mfa_method: 'totp',
 			mfa_code: generateTotpCode(secret),
 		});
-		const loginResp = await loginUser(harness, {email: account.email, password: account.password});
+		const loginResp = await loginUser(harness, {email: account.username, password: account.password});
 		expect('mfa' in loginResp && loginResp.mfa).toBe(true);
 		const loginMfaResp = loginResp as LoginMfaResponse;
 		expect(loginMfaResp.ticket).toBeTruthy();
@@ -111,7 +111,7 @@ describe('WebAuthn MFA login', () => {
 			})
 			.expect(204)
 			.execute();
-		const loginResp = await loginUser(harness, {email: account.email, password: account.password});
+		const loginResp = await loginUser(harness, {email: account.username, password: account.password});
 		expect('mfa' in loginResp).toBe(false);
 		const loginSuccessResp = loginResp as LoginSuccessResponse;
 		expect(loginSuccessResp.token).toBeTruthy();

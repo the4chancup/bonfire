@@ -56,7 +56,7 @@ async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secr
 	const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
 		.post('/auth/login')
 		.body({
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})
 		.execute();
@@ -94,7 +94,7 @@ async function setupWebAuthnOnlyUser(
 	const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
 		.post('/auth/login')
 		.body({
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})
 		.execute();

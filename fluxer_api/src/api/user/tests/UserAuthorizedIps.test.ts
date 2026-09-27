@@ -66,13 +66,13 @@ describe('User authorised IPs', () => {
 		const ip = '203.0.113.42';
 		await seedAuthorizedIp({
 			harness,
-			email: account.email,
+			email: account.username,
 			password: account.password,
 			ip,
 		});
 		const login = await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', ip)
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -83,7 +83,7 @@ describe('User authorised IPs', () => {
 			.execute();
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', ip)
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.IP_AUTHORIZATION_REQUIRED)
 			.execute();
@@ -94,13 +94,13 @@ describe('User authorised IPs', () => {
 		const rotatedIp = '2a01:e0a:d10:95b0:01e4:53a8:d0dd:7733';
 		await seedAuthorizedIp({
 			harness,
-			email: account.email,
+			email: account.username,
 			password: account.password,
 			ip: firstIp,
 		});
 		await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', rotatedIp)
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -114,7 +114,7 @@ describe('User authorised IPs', () => {
 		await upsertOne(AuthorizedIps.insert({user_id: userId, ip: legacyIp}));
 		await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', rotatedIp)
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -126,7 +126,7 @@ describe('User authorised IPs', () => {
 		);
 		await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', laterRotatedIp)
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -138,13 +138,13 @@ describe('User authorised IPs', () => {
 		const laterRotatedIp = '2a01:e0a:d10:95b0:b53f:16d3:aff2:9b0f';
 		await seedAuthorizedIp({
 			harness,
-			email: account.email,
+			email: account.username,
 			password: account.password,
 			ip: firstIp,
 		});
 		const login = await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', rotatedIp)
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -155,7 +155,7 @@ describe('User authorised IPs', () => {
 			.execute();
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', laterRotatedIp)
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.IP_AUTHORIZATION_REQUIRED)
 			.execute();
@@ -166,13 +166,13 @@ describe('User authorised IPs', () => {
 		const nearbyIp = '203.0.113.43';
 		await seedAuthorizedIp({
 			harness,
-			email: account.email,
+			email: account.username,
 			password: account.password,
 			ip: authorizedIp,
 		});
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', nearbyIp)
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.IP_AUTHORIZATION_REQUIRED)
 			.execute();
@@ -191,7 +191,7 @@ describe('User authorised IPs', () => {
 		try {
 			const login = await createBuilderWithoutAuth<LoginResponse>(harness)
 				.post('/auth/login')
-				.body({email: account.email, password: account.password})
+				.body({email: account.username, password: account.password})
 				.header('x-forwarded-for', ip)
 				.expect(HTTP_STATUS.OK)
 				.execute();
@@ -222,7 +222,7 @@ describe('User authorised IPs', () => {
 
 		const login = await createBuilderWithoutAuth<LoginResponse>(harness)
 			.post('/auth/login')
-			.body({email: account.email, password: account.password})
+			.body({email: account.username, password: account.password})
 			.header('x-forwarded-for', ip)
 			.expect(HTTP_STATUS.OK)
 			.execute();

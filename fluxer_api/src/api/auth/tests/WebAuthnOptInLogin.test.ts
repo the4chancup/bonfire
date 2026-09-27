@@ -46,7 +46,7 @@ describe('WebAuthn opt-in login', () => {
 			mfa_code: generateTotpCode(secret),
 		}));
 		const login = (await loginUser(harness, {
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})) as LoginMfaResponse;
 		expect(login.mfa).toBe(true);
@@ -68,7 +68,7 @@ describe('WebAuthn opt-in login', () => {
 			mfa_code: generateTotpCode(secret),
 		}));
 		const login = (await loginUser(harness, {
-			email: account.email,
+			email: account.username,
 			password: account.password,
 		})) as LoginMfaResponse;
 		const mfaOptions = await createBuilderWithoutAuth<WebAuthnAuthenticationOptions>(harness)
@@ -107,7 +107,7 @@ describe('WebAuthn opt-in login', () => {
 			.execute();
 		expect(me.authenticator_types).toEqual([]);
 		expect(me.mfa_enabled).toBe(false);
-		const passwordLogin = await loginUser(harness, {email: account.email, password: account.password});
+		const passwordLogin = await loginUser(harness, {email: account.username, password: account.password});
 		expect('mfa' in passwordLogin).toBe(false);
 		expect((passwordLogin as LoginSuccessResponse).token).toBeTruthy();
 		const passkeyToken = await loginWithDiscoverablePasskey(harness, device);

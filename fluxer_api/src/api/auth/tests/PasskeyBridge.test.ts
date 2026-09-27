@@ -296,7 +296,7 @@ describe('Passkey bridge', () => {
 			'Old',
 		);
 		await setWebAuthnTwoFactor(harness, account.token, true, {mfa_method: 'totp', mfa_code: generateTotpCode(secret)});
-		const login = (await loginUser(harness, {email: account.email, password: account.password})) as LoginMfaResponse;
+		const login = (await loginUser(harness, {email: account.username, password: account.password})) as LoginMfaResponse;
 		const started = await startLogin({purpose: 'login_mfa', ticket: login.ticket});
 		const options = await fetchOptions(started.ceremonyId);
 		expect(options.allowCredentials?.map((cred) => cred.id)).toEqual([device.credentialId.toString('base64url')]);

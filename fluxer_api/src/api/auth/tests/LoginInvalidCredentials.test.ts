@@ -21,7 +21,7 @@ describe('Auth login invalid credentials', () => {
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/login')
 			.body({
-				email: account.email,
+				email: account.username,
 				password: 'WrongPassword123!',
 			})
 			.expect(400)
