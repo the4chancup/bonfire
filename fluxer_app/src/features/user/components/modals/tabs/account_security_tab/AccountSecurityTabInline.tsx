@@ -12,7 +12,6 @@ import type {UserSettingsTabType} from '@app/features/user/components/settings_u
 import Users from '@app/features/user/state/Users';
 import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import {observer} from 'mobx-react-lite';
-import {useState} from 'react';
 
 interface AccountSecurityInlineTabProps {
 	settingsTabType?: UserSettingsTabType;
@@ -21,7 +20,6 @@ interface AccountSecurityInlineTabProps {
 
 export const AccountSecurityInlineTab = observer(({settingsTabType, initialSubtab}: AccountSecurityInlineTabProps) => {
 	const user = Users.currentUser;
-	const [showMaskedEmail, setShowMaskedEmail] = useState(false);
 	if (!user) return null;
 	if (StreamerMode.shouldHidePersonalInformation) {
 		return (
@@ -40,8 +38,6 @@ export const AccountSecurityInlineTab = observer(({settingsTabType, initialSubta
 				user={user}
 				isClaimed={isClaimed}
 				passkeys={passkeys}
-				showMaskedEmail={showMaskedEmail}
-				setShowMaskedEmail={setShowMaskedEmail}
 				targetSection={targetSection}
 				data-flx="user.account-security-tab.inline.account-security-sections"
 			/>

@@ -55,10 +55,7 @@ const GuildBansTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const [activeSheetBan, setActiveSheetBan] = useState<GuildBan | null>(null);
 	const {isOpen: isMenuOpen, withTracking} = useContextMenuTrigger();
 	const isMobile = MobileLayout.enabled;
-	const getRawTag = useCallback(
-		(ban: GuildBan) => ban.user.tag ?? `${ban.user.username}#${(ban.user.discriminator ?? '').padStart(4, '0')}`,
-		[],
-	);
+	const getRawTag = useCallback((ban: GuildBan) => ban.user.username, []);
 	const formatTag = useCallback((ban: GuildBan) => NicknameUtils.formatTagForStreamerMode(getRawTag(ban)), [getRawTag]);
 	const fetchBans = useCallback(async () => {
 		setIsLoading(true);

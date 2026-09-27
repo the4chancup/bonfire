@@ -38,7 +38,7 @@ const RegisterPageContent = observer(function RegisterPageContent() {
 			<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.div">
 				<AuthRegisterFormCore
 					fields={{
-						showEmail: true,
+						showEmail: false,
 						showPassword: true,
 						showPasswordConfirmation: true,
 						showUsernameValidation: true,

@@ -135,6 +135,15 @@ export async function register(
 	if ((requiresTermsConsent || requiresPrivacyConsent) && !data.consent) {
 		throw InputValidationError.fromCode('consent', ValidationErrorCodes.MUST_AGREE_TO_TOS_AND_PRIVACY_POLICY);
 	}
+	if (data.email) {
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+	}
+	if (!data.username) {
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_LENGTH_INVALID, {min: 1, max: 32});
+	}
+	if (!data.password) {
+		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_LENGTH_INVALID, {min: 8, max: 256});
+	}
 	const now = new Date();
 	const registrationAccess = await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
 	const clientIp = requireClientIp(request, {
@@ -620,7 +629,7 @@ async function enforceRegistrationRateLimits(
 async function allocateDiscriminator(discriminatorService: IDiscriminatorService, username: string): Promise<number> {
 	const result = await discriminatorService.generateDiscriminator({username});
 	if (!result.available || result.discriminator === -1) {
-		throw InputValidationError.fromCode('username', ValidationErrorCodes.TOO_MANY_USERS_WITH_THIS_USERNAME);
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.TAG_ALREADY_TAKEN);
 	}
 	return result.discriminator;
 }

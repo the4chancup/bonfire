@@ -6,6 +6,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import * as AuthEmail from '@app/api/auth/AuthEmail';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
@@ -44,6 +45,7 @@ import type {
 	SendPasswordResetRequest,
 	SetUserAclsRequest,
 	SetUserTraitsRequest,
+	TemporaryPasswordResponse,
 	TerminateSessionsRequest,
 	UpdateHasVerifiedPhoneRequest,
 	UpdateSuspiciousActivityFlagsRequest,
@@ -268,6 +270,40 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map([['email', user.email]]),
 		});
+	}
+
+	async setTemporaryPassword(
+		data: SendPasswordResetRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<TemporaryPasswordResponse> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const {apiContext, auditService, updatePropagator} = this.deps;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user || user.isBot) {
+			throw new UnknownUserError();
+		}
+		const password = await AuthUtility.generateSecureToken(apiContext, 20);
+		const updatedUser = await userRepository.patchUpsert(
+			userId,
+			{
+				password_hash: await AuthPassword.hashPassword(apiContext, password),
+				password_last_changed_at: new Date(),
+			},
+			user.toRow(),
+		);
+		await AuthSession.terminateAllUserSessions(apiContext, userId);
+		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'set_temporary_password',
+			auditLogReason,
+			metadata: new Map(),
+		});
+		return {password};
 	}
 
 	async resendVerificationEmail(

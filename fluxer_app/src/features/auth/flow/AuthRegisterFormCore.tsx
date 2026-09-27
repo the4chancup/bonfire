@@ -17,7 +17,11 @@ import {
 	EMPTY_AUTH_REGISTER_FORM_DRAFT,
 	useAuthRegisterDraftContext,
 } from '@app/features/auth/state/AuthRegisterDraftContext';
-import {EMAIL_DESCRIPTOR, PASSWORD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	EMAIL_DESCRIPTOR,
+	PASSWORD_DESCRIPTOR,
+	USERNAME_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Button} from '@app/features/ui/button/Button';
 import {useUsernameSuggestions} from '@app/features/user/hooks/useUsernameSuggestions';
@@ -56,12 +60,8 @@ const WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR = msg({
 	message: 'What should people call you?',
 	comment: 'Question prompt in the authentication auth register form core. Keep the tone plain and specific.',
 });
-const USERNAME_OPTIONAL_DESCRIPTOR = msg({
-	message: 'Username (optional)',
-	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
-});
-const LEAVE_BLANK_FOR_A_RANDOM_USERNAME_DESCRIPTOR = msg({
-	message: 'Leave blank for a random username',
+const LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg({
+	message: 'Letters, numbers and underscores',
 	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
 });
 const MAX_USERNAME_LENGTH = 32;
@@ -251,6 +251,9 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	});
 	const missingFields = useMemo(() => {
 		const missing: Array<MissingField> = [];
+		if (!form.getValue('username')) {
+			missing.push({key: 'username', label: i18n._(USERNAME_DESCRIPTOR)});
+		}
 		if (showEmail && !form.getValue('email')) {
 			missing.push({key: 'email', label: i18n._(EMAIL_DESCRIPTOR)});
 		}
@@ -352,8 +355,9 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 					name="username"
 					type="text"
 					autoComplete="username"
-					label={i18n._(USERNAME_OPTIONAL_DESCRIPTOR)}
-					placeholder={i18n._(LEAVE_BLANK_FOR_A_RANDOM_USERNAME_DESCRIPTOR)}
+					required
+					label={i18n._(USERNAME_DESCRIPTOR)}
+					placeholder={i18n._(LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR)}
 					value={usernameValue}
 					onChange={(value) => setDraftedFormValue('username', value)}
 					error={form.getError('username') || fieldErrors?.get('username')}

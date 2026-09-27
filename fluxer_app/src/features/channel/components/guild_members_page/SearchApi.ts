@@ -30,7 +30,7 @@ export function toMemberDisplayData(searchMember: SearchableGuildMember, guildId
 	const member = GuildMembers.getMember(guildId, searchMember.user_id);
 	const resolvedName = member?.nick || searchMember.nickname || searchMember.global_name || searchMember.username;
 	const displayName = NicknameUtils.formatNicknameForStreamerMode(resolvedName);
-	const tag = user ? user.tag : `${searchMember.username}#${searchMember.discriminator}`;
+	const tag = user ? user.tag : searchMember.username;
 	return {
 		userId: searchMember.user_id,
 		displayName,

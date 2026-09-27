@@ -212,7 +212,7 @@ export async function login(
 	if (!ipRateLimit.allowed && !skipRateLimits) {
 		throw createRateLimitError(ipRateLimit);
 	}
-	const user = await users.findByEmail(data.email);
+	const user = await users.findByUsernameDiscriminator(data.email, 0);
 	if (!user) {
 		throw InputValidationError.fromCodes([
 			{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},

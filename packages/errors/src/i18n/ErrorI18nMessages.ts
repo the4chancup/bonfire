@@ -267,7 +267,7 @@ export const ERROR_I18N_MESSAGES = {
 	'email.invalid_or_expired_reset_token': 'Invalid or expired password reset token.',
 	'email.invalid_or_expired_revert_token': 'Invalid or expired revert token.',
 	'email.invalid_or_expired_verification_token': 'Invalid or expired verification token.',
-	'email.invalid_or_password': 'Invalid email or password.',
+	'email.invalid_or_password': 'Invalid username or password.',
 	'email.invalid_token': 'Invalid email token.',
 	'email.invalid_verification_code': 'Invalid verification code.',
 	'email.length_invalid': 'Email address must be between {min} and {max} characters.',
@@ -546,10 +546,10 @@ export const ERROR_I18N_MESSAGES = {
 	'usernames_and_tags.display_name_reserved_value': 'Display name can\'t be "everyone" or "here".',
 	'usernames_and_tags.global_name_length_invalid': 'Global name must be between {min} and {max} characters.',
 	'usernames_and_tags.global_name_reserved_value': 'Global name can\'t be "everyone" or "here".',
-	'usernames_and_tags.tag_already_taken': 'This tag is already taken.',
+	'usernames_and_tags.tag_already_taken': 'This username is already taken.',
 	'usernames_and_tags.too_many_users_with_this_username': 'There are too many users with this username.',
 	'usernames_and_tags.too_many_users_with_username_try_different':
-		'There are too many users with this username. Try a different username.',
+		'This username is already taken. Try a different username.',
 	'usernames_and_tags.unclaimed_accounts_can_only_set_email_via_token':
 		'Unclaimed accounts can only set an email address using a token.',
 	'usernames_and_tags.username_invalid_characters':

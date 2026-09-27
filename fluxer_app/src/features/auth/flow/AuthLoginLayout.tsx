@@ -6,7 +6,6 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AccountSelector} from '@app/features/auth/components/accounts/AccountSelector';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
-import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {
 	AuthSsoPanel,
 	CONTINUE_WITH_SSO_DESCRIPTOR,
@@ -71,10 +70,6 @@ const SIGN_IN_FLOW_DESCRIPTOR = msg({
 const WELCOME_BACK_DESCRIPTOR = msg({
 	message: 'Welcome back',
 	comment: 'Heading on the standard sign-in form.',
-});
-const FORGOT_PASSWORD_DESCRIPTOR = msg({
-	message: 'Forgot your password?',
-	comment: 'Authentication link label that opens password recovery.',
 });
 const OLD_APP_SIGN_IN_HINT_DESCRIPTOR = msg({
 	message: 'Approve this app from the {productName} app you already use. No password needed.',
@@ -413,13 +408,6 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					submitLabel={i18n._(SIGN_IN_DESCRIPTOR)}
 					classes={{form: styles.form}}
 					linksWrapperClassName={styles.formLinks}
-					links={
-						RuntimeConfig.emailsEnabled ? (
-							<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.flow.auth-login-layout.link">
-								{i18n._(FORGOT_PASSWORD_DESCRIPTOR)}
-							</AuthRouterLink>
-						) : null
-					}
 					disableSubmit={isPasskeyLoading || isPasskeyBridgeRedeeming}
 					data-flx="auth.flow.auth-login-layout.auth-login-email-password-form"
 				/>

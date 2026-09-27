@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import FormField from '@app/features/auth/flow/AuthFormField';
-import {EMAIL_DESCRIPTOR, PASSWORD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {PASSWORD_DESCRIPTOR, USERNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -60,7 +60,7 @@ export default function AuthLoginEmailPasswordForm({
 			<FormField
 				id={emailId}
 				name="email"
-				type="email"
+				type="text"
 				autoComplete="username"
 				autoCapitalize="none"
 				autoCorrect="off"
@@ -68,7 +68,7 @@ export default function AuthLoginEmailPasswordForm({
 				spellCheck={false}
 				data-step-focus="true"
 				required
-				label={i18n._(EMAIL_DESCRIPTOR)}
+				label={i18n._(USERNAME_DESCRIPTOR)}
 				value={form.getValue('email')}
 				onChange={(value) => form.setValue('email', value)}
 				error={form.getError('email') || fieldErrors?.get('email')}

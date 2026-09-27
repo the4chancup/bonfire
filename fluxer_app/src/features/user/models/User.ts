@@ -381,7 +381,7 @@ export class User {
 	}
 
 	get tag(): string {
-		return `${this.username}#${this.discriminator}`;
+		return this.username;
 	}
 
 	get createdAt(): Date {
@@ -614,7 +614,7 @@ export class User {
 	}
 
 	isClaimed(): boolean {
-		return !!this.email;
+		return !!this.email || this.passwordLastChangedAt != null;
 	}
 
 	equals(other: User): boolean {

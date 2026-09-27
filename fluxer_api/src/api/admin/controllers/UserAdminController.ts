@@ -46,6 +46,7 @@ import {
 	LookupUserRequest,
 	LookupUserResponse,
 	RemoveUserRelationshipsResponse,
+	TemporaryPasswordResponse,
 	TerminateSessionsResponse,
 	UserMutationResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
@@ -807,6 +808,35 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			await adminService.userService.securityService.sendPasswordReset({user_id: userId}, adminUserId, auditLogReason);
 			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/admin/users/:user_id/temporary-password',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'set_admin_user_temporary_password',
+			summary: 'Set temporary user password',
+			responseSchema: TemporaryPasswordResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Replace the user password with a random temporary one and return it, terminating all of the user sessions. For instances without email. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const {user_id: userId} = ctx.req.valid('param');
+			return ctx.json(
+				await adminService.userService.securityService.setTemporaryPassword(
+					{user_id: userId},
+					adminUserId,
+					auditLogReason,
+				),
+			);
 		},
 	);
 	app.put(

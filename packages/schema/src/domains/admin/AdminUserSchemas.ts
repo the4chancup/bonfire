@@ -198,6 +198,12 @@ export const TerminateSessionsResponse = z.object({
 
 export type TerminateSessionsResponse = z.infer<typeof TerminateSessionsResponse>;
 
+export const TemporaryPasswordResponse = z.object({
+	password: z.string().describe('Newly set temporary password; give it to the user out-of-band'),
+});
+
+export type TemporaryPasswordResponse = z.infer<typeof TemporaryPasswordResponse>;
+
 const UserFlagValueType = createBitflagStringType(
 	UserFlags,
 	UserFlagsDescriptions,

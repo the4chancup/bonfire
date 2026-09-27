@@ -46,7 +46,7 @@ function checkGuildVerification(params: VerificationParams): void {
 		}
 		return;
 	}
-	if (!user.email) {
+	if (user.isUnclaimedAccount()) {
 		throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
 	}
 	if (verificationLevel >= GuildVerificationLevel.LOW) {

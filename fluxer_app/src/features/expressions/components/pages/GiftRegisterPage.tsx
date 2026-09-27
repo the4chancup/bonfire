@@ -5,8 +5,8 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
-import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {GiftHeader} from '@app/features/auth/flow/GiftHeader';
@@ -119,11 +119,17 @@ const GiftRegisterPage = observer(function GiftRegisterPage() {
 			/>
 			<GiftHeader gift={gift} variant="register" data-flx="expressions.gift-register-page.gift-header" />
 			<div className={sharedStyles.container} data-flx="expressions.gift-register-page.div">
-				<AuthMinimalRegisterFormCore
+				<AuthRegisterFormCore
+					fields={{
+						showEmail: false,
+						showPassword: true,
+						showPasswordConfirmation: true,
+						showUsernameValidation: true,
+					}}
 					submitLabel={<Trans>Create account to claim gift</Trans>}
 					redirectPath="/"
 					onRegister={handleRegisterComplete}
-					data-flx="expressions.gift-register-page.auth-minimal-register-form-core"
+					data-flx="expressions.gift-register-page.auth-register-form-core"
 				/>
 				<AuthBottomLink variant="login" to={loginPath} data-flx="expressions.gift-register-page.auth-bottom-link" />
 			</div>

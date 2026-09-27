@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomInt} from 'node:crypto';
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -9,7 +8,6 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {ms, seconds} from 'itty-time';
@@ -82,6 +80,9 @@ export class DiscriminatorService implements IDiscriminatorService {
 
 	async generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult> {
 		const {username, requestedDiscriminator, user} = params;
+		if (requestedDiscriminator !== undefined && requestedDiscriminator !== 0) {
+			return {discriminator: requestedDiscriminator, available: false};
+		}
 		const usernameLower = username.toLowerCase();
 		const lockKey = `discrim-lock:${usernameLower}`;
 		const lockToken = await this.acquireLockWithRetry(lockKey);
@@ -89,27 +90,20 @@ export class DiscriminatorService implements IDiscriminatorService {
 			return {discriminator: -1, available: false};
 		}
 		try {
-			const allowCustomDiscriminator = await this.canUseCustomDiscriminator(user);
-			if (allowCustomDiscriminator && requestedDiscriminator !== undefined) {
-				const isAvailable = await this.isDiscriminatorAvailable(usernameLower, requestedDiscriminator);
-				if (isAvailable) {
-					await this.cacheClaimedDiscriminator(usernameLower, requestedDiscriminator);
-					return {discriminator: requestedDiscriminator, available: true};
-				}
-				return {discriminator: requestedDiscriminator, available: false};
+			if (!(await this.isUsernameFree(usernameLower, user))) {
+				return {discriminator: 0, available: false};
 			}
-			const discriminator = await this.generateRandomDiscriminator(usernameLower);
-			if (discriminator === -1) {
-				return {discriminator: -1, available: false};
-			}
-			await this.cacheClaimedDiscriminator(usernameLower, discriminator);
-			return {discriminator, available: true};
+			await this.cacheClaimedDiscriminator(usernameLower, 0);
+			return {discriminator: 0, available: true};
 		} finally {
 			await this.releaseLock(lockKey, lockToken);
 		}
 	}
 
 	async isDiscriminatorAvailableForUsername(username: string, discriminator: number): Promise<boolean> {
+		if (discriminator !== 0) {
+			return false;
+		}
 		const usernameLower = username.toLowerCase();
 		const lockKey = `discrim-lock:${usernameLower}`;
 		const lockToken = await this.acquireLockWithRetry(lockKey);
@@ -117,7 +111,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 			return false;
 		}
 		try {
-			return await this.isDiscriminatorAvailable(usernameLower, discriminator);
+			return await this.isUsernameFree(usernameLower, null);
 		} finally {
 			await this.releaseLock(lockKey, lockToken);
 		}
@@ -179,40 +173,16 @@ export class DiscriminatorService implements IDiscriminatorService {
 		}
 	}
 
-	private async isDiscriminatorAvailable(username: string, discriminator: number): Promise<boolean> {
-		const cacheKey = `discrim-claimed:${username}`;
-		const isCached = await this.cacheService.sismember(cacheKey, discriminator.toString());
-		if (isCached) {
+	private async isUsernameFree(usernameLower: string, user?: User | null): Promise<boolean> {
+		const caller = user != null && user.username.toLowerCase() === usernameLower ? user : null;
+		if (caller === null && (await this.getCachedDiscriminators(usernameLower)).size > 0) {
 			return false;
 		}
-		const user = await this.userRepository.findByUsernameDiscriminator(username, discriminator);
-		return user === null;
-	}
-
-	private async generateRandomDiscriminator(username: string): Promise<number> {
-		const takenDiscriminators = await this.userRepository.findDiscriminatorsByUsername(username);
-		const cachedDiscriminators = await this.getCachedDiscriminators(username);
-		const allTaken = new Set([...takenDiscriminators, ...cachedDiscriminators]);
-		if (!Config.instance.selfHosted) {
-			for (const reservedDiscriminator of NON_SELF_HOSTED_RESERVED_DISCRIMINATORS) {
-				allTaken.add(reservedDiscriminator);
-			}
+		const holders = await this.userRepository.findDiscriminatorsByUsername(usernameLower);
+		if (holders.size === 0) {
+			return true;
 		}
-		if (allTaken.size >= 9999) {
-			return -1;
-		}
-		for (let attempts = 0; attempts < 10; attempts++) {
-			const randomDiscrim = randomInt(1, 10000);
-			if (!allTaken.has(randomDiscrim)) {
-				return randomDiscrim;
-			}
-		}
-		for (let i = 1; i <= 9999; i++) {
-			if (!allTaken.has(i)) {
-				return i;
-			}
-		}
-		return -1;
+		return caller !== null && holders.size === 1 && holders.has(caller.discriminator);
 	}
 
 	private async cacheClaimedDiscriminator(username: string, discriminator: number): Promise<void> {

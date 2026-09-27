@@ -45,13 +45,11 @@ interface AccountSecuritySectionsProps {
 	user: User;
 	isClaimed: boolean;
 	passkeys: ReadonlyArray<WebAuthnCredential>;
-	showMaskedEmail: boolean;
-	setShowMaskedEmail: (show: boolean) => void;
 	targetSection?: AccountSettingsManagementSectionId | null;
 }
 
 export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = observer(
-	({user, isClaimed, passkeys, showMaskedEmail, setShowMaskedEmail, targetSection}) => {
+	({user, isClaimed, passkeys, targetSection}) => {
 		const {i18n} = useLingui();
 		const [authorizedAppsSubmitting, setAuthorizedAppsSubmitting] = useState(false);
 		const authorizedAppsSubmittingRef = useRef(false);
@@ -94,8 +92,6 @@ export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = o
 						<AccountTabContent
 							user={user}
 							isClaimed={isClaimed}
-							showMaskedEmail={showMaskedEmail}
-							setShowMaskedEmail={setShowMaskedEmail}
 							data-flx="user.account-security-sections.account-tab-content"
 						/>
 					</SettingsSection>

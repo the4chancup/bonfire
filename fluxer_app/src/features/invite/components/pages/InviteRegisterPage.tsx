@@ -5,8 +5,8 @@ import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
-import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
@@ -176,11 +176,17 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			/>
 			<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header" />
 			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div--4">
-				<AuthMinimalRegisterFormCore
+				<AuthRegisterFormCore
+					fields={{
+						showEmail: false,
+						showPassword: true,
+						showPasswordConfirmation: true,
+						showUsernameValidation: true,
+					}}
 					submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
 					redirectPath="/"
 					inviteCode={code}
-					data-flx="invite.invite-register-page.auth-minimal-register-form-core"
+					data-flx="invite.invite-register-page.auth-register-form-core"
 				/>
 				<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link" />
 			</div>

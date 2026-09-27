@@ -5,9 +5,9 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
-import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import {AuthPageHeader} from '@app/features/auth/flow/AuthPageHeader';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
@@ -125,7 +125,13 @@ const ThemeRegisterPage = observer(function ThemeRegisterPage() {
 				subtitle={i18n._(SHARED_THEME_DESCRIPTOR)}
 				data-flx="theme.theme-register-page.auth-page-header"
 			/>
-			<AuthMinimalRegisterFormCore
+			<AuthRegisterFormCore
+				fields={{
+					showEmail: false,
+					showPassword: true,
+					showPasswordConfirmation: true,
+					showUsernameValidation: true,
+				}}
 				submitLabel={<Trans>Create account</Trans>}
 				redirectPath={themePath}
 				onRegister={handleRegisterComplete}
@@ -134,7 +140,7 @@ const ThemeRegisterPage = observer(function ThemeRegisterPage() {
 						<Trans>Once your account is created, we'll take you back to the theme so you can apply it.</Trans>
 					</p>
 				}
-				data-flx="theme.theme-register-page.auth-minimal-register-form-core"
+				data-flx="theme.theme-register-page.auth-register-form-core"
 			/>
 			<AuthBottomLink variant="login" to={loginPath} data-flx="theme.theme-register-page.auth-bottom-link" />
 		</div>

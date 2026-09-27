@@ -300,9 +300,7 @@ const SwitchAccountsMenu = observer(
 						const avatarUrl = getAccountAvatarUrl(account);
 						const displayName = getAccountDisplayName(account, '???');
 						const userData = account.userData;
-						const accountTag = userData
-							? NicknameUtils.formatTagForStreamerMode(`${userData.username}#${userData.discriminator}`)
-							: displayName;
+						const accountTag = userData ? NicknameUtils.formatTagForStreamerMode(userData.username) : displayName;
 						return (
 							<FocusRing
 								key={account.userId}

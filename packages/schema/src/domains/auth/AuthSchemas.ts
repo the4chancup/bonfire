@@ -58,7 +58,7 @@ export const UsernameSuggestionsRequest = z.object({
 export type UsernameSuggestionsRequest = z.infer<typeof UsernameSuggestionsRequest>;
 
 export const LoginRequest = z.object({
-	email: EmailType.describe('Email address for authentication'),
+	email: UsernameType.describe('Username for authentication (field name kept for client compatibility)'),
 	password: PasswordType.describe('Account password'),
 	invite_code: createStringType(0, 256).nullish().describe('Guild invite code to join after login'),
 });
