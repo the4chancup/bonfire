@@ -3,7 +3,6 @@
 import {
 	DELETE_ACCOUNT_DESCRIPTOR,
 	DISABLE_ACCOUNT_DESCRIPTOR,
-	EMAIL_DESCRIPTOR,
 	PASSWORD_DESCRIPTOR,
 	TWO_FACTOR_AUTHENTICATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -15,22 +14,6 @@ import {
 } from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const MAIL_DESCRIPTOR = msg({
-	message: 'Mail',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ADDRESS_DESCRIPTOR = msg({
-	message: 'Address',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CONTACT_DESCRIPTOR = msg({
-	message: 'Contact',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CHANGE_YOUR_EMAIL_ADDRESS_DESCRIPTOR = msg({
-	message: 'Change your email address',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
 const CREDENTIALS_DESCRIPTOR = msg({
 	message: 'Credentials',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -188,15 +171,6 @@ const DELETE_YOUR_ACCOUNT_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 export const accountSecurityIndex: Array<SearchableSettingDescriptor> = [
-	{
-		id: 'account-email',
-		tabType: 'account_security',
-		sectionId: 'account',
-		label: EMAIL_DESCRIPTOR,
-		keywords: [EMAIL_DESCRIPTOR, MAIL_DESCRIPTOR, ADDRESS_DESCRIPTOR, CONTACT_DESCRIPTOR],
-		description: CHANGE_YOUR_EMAIL_ADDRESS_DESCRIPTOR,
-		isVisible: shouldShowClaimedAccountSettings,
-	},
 	{
 		id: 'account-password',
 		tabType: 'account_security',

@@ -45,7 +45,8 @@ const DELETE_TITLE_DESCRIPTOR = msg({
 		'Privacy > Data deletion: modal title for the redesigned message-deletion dialog with scope and date filters.',
 });
 const EXPORT_SUCCESS_DESCRIPTOR = msg({
-	message: "We'll process this as soon as possible. You'll get an email when your archive is ready.",
+	message:
+		"We'll process this as soon as possible. You can download the archive from Settings → Privacy & Safety when it's ready.",
 	comment: 'Success toast shown after a filtered data export job is queued.',
 });
 const DELETE_SUCCESS_DESCRIPTOR = msg({
@@ -111,12 +112,12 @@ const CONFIRM_STEP_TITLE_DESCRIPTOR = msg({
 });
 const EXPORT_CONFIRM_EVERYTHING_DESCRIPTOR = msg({
 	message:
-		"We'll build a downloadable archive of every message you have ever sent and email you when it's ready. The download link in that email expires after 7 days.",
+		"We'll build a downloadable archive of every message you have ever sent. When it's ready, you can download it from Settings → Privacy & Safety; the download expires after 7 days.",
 	comment: 'Confirm-step copy in the data-export modal when scope is everything.',
 });
 const EXPORT_CONFIRM_CUSTOM_DESCRIPTOR = msg({
 	message:
-		"We'll build a downloadable archive that matches the filters below and email you when it's ready. The download link in that email expires after 7 days.",
+		"We'll build a downloadable archive that matches the filters below. When it's ready, you can download it from Settings → Privacy & Safety; the download expires after 7 days.",
 	comment: 'Confirm-step copy in the data-export modal when scope is custom.',
 });
 const DELETE_CONFIRM_DESCRIPTOR = msg({
@@ -352,9 +353,10 @@ function formatDateForSummary(date: Date, locale: string): string {
 
 interface DataRequestModalProps {
 	variant: DataRequestVariant;
+	onExportRequested?: () => void;
 }
 
-export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant}) => {
+export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant, onExportRequested}) => {
 	const {i18n} = useLingui();
 	const config = useMemo(() => getVariantConfig(variant), [variant]);
 	const scopeOptions = useMemo<ReadonlyArray<RadioOption<ScopeValue>>>(
@@ -490,6 +492,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 				} else {
 					await UserCommands.requestFilteredDataHarvest(buildFilter('selected'));
 				}
+				onExportRequested?.();
 			} else {
 				const filterScope: BulkDeleteMyMessagesFilter['scope'] =
 					scope === 'inaccessible_only' ? 'inaccessible_only' : 'selected';
@@ -502,7 +505,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 		} finally {
 			setIsSubmitting(false);
 		}
-	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal]);
+	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal, onExportRequested]);
 	const dateModeOptions = useMemo(
 		() => [
 			{value: 'all_time' as const, label: i18n._(DATE_MODE_ALL_TIME_DESCRIPTOR)},

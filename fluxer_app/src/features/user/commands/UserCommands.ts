@@ -12,7 +12,10 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Users from '@app/features/user/state/Users';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
+import type {
+	HarvestDownloadUrlResponse,
+	HarvestStatusResponse,
+} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
 	BackupCode,
 	PasswordChangeCompleteResponse,
@@ -729,6 +732,17 @@ export async function getHarvestStatus(harvestId: string): Promise<HarvestStatus
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to fetch harvest status', error);
+		throw error;
+	}
+}
+
+export async function getHarvestDownloadUrl(harvestId: string): Promise<HarvestDownloadUrlResponse> {
+	try {
+		logger.debug('Fetching harvest download url', {harvestId});
+		const response = await http.get<HarvestDownloadUrlResponse>(Endpoints.USER_HARVEST_DOWNLOAD(harvestId));
+		return response.body;
+	} catch (error) {
+		logger.error('Failed to fetch harvest download url', error);
 		throw error;
 	}
 }

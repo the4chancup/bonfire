@@ -333,6 +333,7 @@ const reportRoute = createAuthPageRoute({
 	path: Routes.REPORT,
 	page: ReportPage,
 	dataFlx: 'app.router.auth-routes.report-page',
+	onEnter: redirectWhenEmailsDisabled,
 });
 const themeRegisterRoute = createAuthPageRoute({
 	id: 'themeRegister',

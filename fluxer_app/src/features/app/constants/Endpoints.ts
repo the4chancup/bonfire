@@ -208,6 +208,7 @@ export const Endpoints = {
 	USER_HARVEST_FILTERED: '/users/@me/harvest/filtered',
 	USER_HARVEST_LATEST: '/users/@me/harvest/latest',
 	USER_HARVEST_STATUS: (harvestId: string) => `/users/@me/harvest/${harvestId}`,
+	USER_HARVEST_DOWNLOAD: (harvestId: string) => `/users/@me/harvest/${harvestId}/download`,
 	USER_PRELOAD_MESSAGES: '/users/@me/preload-messages',
 	USER_NOTE: (userId: string) => `/users/@me/notes/${userId}`,
 	USER_CHECK_TAG: '/users/check-tag',

@@ -344,20 +344,22 @@ const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 	if (!trimmedTag) {
 		return null;
 	}
-	if (isProbablyAValidSnowflake(trimmedTag)) {
-		return trimmedTag;
-	}
 	if (isCurrentUserToken(trimmedTag)) {
 		return getCurrentUserId();
 	}
 	if (hints?.usersByTag?.[trimmedTag]) return hints.usersByTag[trimmedTag];
 	const name = DISCRIMINATOR_SUFFIX_RE.test(trimmedTag) ? trimmedTag.slice(0, trimmedTag.lastIndexOf('#')) : trimmedTag;
-	if (!name) return null;
-	const exact = Users.getUserByTag(name);
-	if (exact) return exact.id;
-	const lower = name.toLowerCase();
-	const user = Users.getUsers().find((candidate) => candidate.tag.toLowerCase() === lower);
-	return user?.id ?? null;
+	if (name) {
+		const exact = Users.getUserByTag(name);
+		if (exact) return exact.id;
+		const lower = name.toLowerCase();
+		const user = Users.getUsers().find((candidate) => candidate.tag.toLowerCase() === lower);
+		if (user) return user.id;
+	}
+	if (isProbablyAValidSnowflake(trimmedTag)) {
+		return trimmedTag;
+	}
+	return null;
 };
 export function resolveSearchChannelDisplayName(channel: {
 	name?: string | null;
