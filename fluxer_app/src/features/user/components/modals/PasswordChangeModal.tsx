@@ -90,7 +90,7 @@ export const PasswordChangeModal = observer(() => {
 								autoFocus={true}
 								error={passwordForm.formState.errors.password?.message}
 								label={i18n._(CURRENT_PASSWORD_DESCRIPTOR)}
-								maxLength={128}
+								maxLength={256}
 								placeholder={'•'.repeat(32)}
 								required={true}
 								type="password"
@@ -101,7 +101,7 @@ export const PasswordChangeModal = observer(() => {
 								autoComplete="new-password"
 								error={passwordForm.formState.errors.new_password?.message}
 								label={i18n._(NEW_PASSWORD_DESCRIPTOR)}
-								maxLength={128}
+								maxLength={256}
 								minLength={8}
 								placeholder={'•'.repeat(32)}
 								required={true}
@@ -113,7 +113,7 @@ export const PasswordChangeModal = observer(() => {
 								autoComplete="new-password"
 								error={passwordForm.formState.errors.confirm_password?.message}
 								label={i18n._(CONFIRM_NEW_PASSWORD_DESCRIPTOR)}
-								maxLength={128}
+								maxLength={256}
 								minLength={8}
 								placeholder={'•'.repeat(32)}
 								required={true}

@@ -54,6 +54,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 	private static readonly LOCK_RETRY_DELAY_MS = 50;
 	private static readonly LOCK_MAX_WAIT_MS = ms('10 seconds');
 	private static readonly DISCRIM_CACHE_TTL_S = seconds('30 seconds');
+	private static readonly RESERVED_USERNAMES: ReadonlySet<string> = new Set(['deleteduser', 'fluxer']);
 
 	constructor(
 		private userRepository: IUserRepository,
@@ -174,6 +175,9 @@ export class DiscriminatorService implements IDiscriminatorService {
 	}
 
 	private async isUsernameFree(usernameLower: string, user?: User | null): Promise<boolean> {
+		if (DiscriminatorService.RESERVED_USERNAMES.has(usernameLower)) {
+			return false;
+		}
 		const caller = user != null && user.username.toLowerCase() === usernameLower ? user : null;
 		if (caller === null && (await this.getCachedDiscriminators(usernameLower)).size > 0) {
 			return false;

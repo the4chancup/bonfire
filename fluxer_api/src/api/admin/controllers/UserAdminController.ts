@@ -823,7 +823,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Replace the user password with a random temporary one and return it, terminating all of the user sessions. For instances without email. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.',
+				'Replace the user password with a random temporary one and return it with the username, terminating all of the user sessions. Refused for accounts holding admin ACLs. For instances without email. Creates audit log entry. Requires USER_UPDATE_EMAIL permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

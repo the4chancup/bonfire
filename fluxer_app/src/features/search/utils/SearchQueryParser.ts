@@ -80,7 +80,7 @@ const KNOWN_KEYS = new Set([
 	'any',
 	'scope',
 ]);
-const USER_TAG_RE = /^([A-Za-z0-9_]+)#(\d{4})$/;
+const DISCRIMINATOR_SUFFIX_RE = /#\d+$/;
 const normalizeSpaces = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 type HasFilter = NonNullable<MessageSearchParams['has']>[number];
@@ -351,8 +351,12 @@ const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 		return getCurrentUserId();
 	}
 	if (hints?.usersByTag?.[trimmedTag]) return hints.usersByTag[trimmedTag];
-	if (!USER_TAG_RE.test(trimmedTag)) return null;
-	const user = Users.getUserByTag(trimmedTag);
+	const name = DISCRIMINATOR_SUFFIX_RE.test(trimmedTag) ? trimmedTag.slice(0, trimmedTag.lastIndexOf('#')) : trimmedTag;
+	if (!name) return null;
+	const exact = Users.getUserByTag(name);
+	if (exact) return exact.id;
+	const lower = name.toLowerCase();
+	const user = Users.getUsers().find((candidate) => candidate.tag.toLowerCase() === lower);
 	return user?.id ?? null;
 };
 export function resolveSearchChannelDisplayName(channel: {

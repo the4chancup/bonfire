@@ -81,8 +81,8 @@ export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {
 			showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
 			return;
 		}
-		const email = account.userData?.email ?? undefined;
-		showBrowserLoginHandoffModal(handleLoginSuccess, email);
+		const username = account.userData?.username ?? undefined;
+		showBrowserLoginHandoffModal(handleLoginSuccess, username);
 	};
 	const handleSwitchAccount = async (userId: string): Promise<void> => {
 		if (isBusy) {

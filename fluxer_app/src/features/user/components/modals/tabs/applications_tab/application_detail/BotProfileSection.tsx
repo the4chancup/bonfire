@@ -49,10 +49,6 @@ const BOT_USERNAME_DESCRIPTOR = msg({
 	message: 'Bot username',
 	comment: 'Short label in the bot profile section. Keep it concise.',
 });
-const DISCRIMINATOR_DESCRIPTOR = msg({
-	message: 'Discriminator',
-	comment: 'Short label in the bot profile section. Keep it concise.',
-});
 const BOT_BIO_DESCRIPTOR = msg({
 	message: 'Bot bio',
 	comment: 'Short label in the bot profile section. Keep it concise.',
@@ -182,19 +178,6 @@ export const BotProfileSection: React.FC<BotProfileSectionProps> = ({
 						)}
 						data-flx="user.applications-tab.application-detail.bot-profile-section.controller"
 					/>
-					<div
-						className={styles.discriminatorInput}
-						data-flx="user.applications-tab.application-detail.bot-profile-section.discriminator-input"
-					>
-						<Input
-							value={application.bot?.discriminator}
-							readOnly
-							disabled
-							maxLength={4}
-							aria-label={i18n._(DISCRIMINATOR_DESCRIPTOR)}
-							data-flx="user.applications-tab.application-detail.bot-profile-section.input--2"
-						/>
-					</div>
 				</div>
 				{form.formState.errors.username && (
 					<div className={styles.error} data-flx="user.applications-tab.application-detail.bot-profile-section.error">

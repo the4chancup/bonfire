@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {EXAMPLE_FLUXER_TAG_FULL} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_FLUXER_TAG} from '@app/features/app/config/I18nDisplayConstants';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -119,7 +119,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 			return i18n._(NO_USER_FOUND_WITH_THAT_USERNAME_DESCRIPTOR);
 		}
 		if (errorCode === APIErrorCodes.DISCRIMINATOR_REQUIRED) {
-			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG_FULL});
+			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG});
 		}
 		return getSendFriendRequestErrorMessage(i18n, errorCode, null);
 	};
@@ -169,7 +169,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 					type="text"
 					value={input}
 					onChange={handleInputChange}
-					placeholder={EXAMPLE_FLUXER_TAG_FULL}
+					placeholder={EXAMPLE_FLUXER_TAG}
 					className={clsx(
 						styles.input,
 						!isMobile && styles.inputDesktop,

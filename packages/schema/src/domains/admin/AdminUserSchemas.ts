@@ -200,6 +200,7 @@ export type TerminateSessionsResponse = z.infer<typeof TerminateSessionsResponse
 
 export const TemporaryPasswordResponse = z.object({
 	password: z.string().describe('Newly set temporary password; give it to the user out-of-band'),
+	username: z.string().describe('Current username of the account, which is its login name'),
 });
 
 export type TemporaryPasswordResponse = z.infer<typeof TemporaryPasswordResponse>;

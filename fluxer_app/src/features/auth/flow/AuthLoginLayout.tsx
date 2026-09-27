@@ -149,7 +149,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	const showLoginFormForAccount = useCallback((account: Account, message?: string | null) => {
 		setShowAccountSelector(false);
 		setSwitchError(message ?? null);
-		setPrefillEmail(account.userData?.email ?? null);
+		setPrefillEmail(account.userData?.username ?? null);
 	}, []);
 	const handleLoginSuccess = useCallback(
 		async (payload: LoginSuccessPayload) => {
@@ -230,7 +230,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	}, [form.setValue, prefillEmail]);
 	const handleSelectExistingAccount = useCallback(
 		async (account: Account) => {
-			const identifier = account.userData?.email ?? account.userData?.username ?? account.userId;
+			const identifier = account.userData?.username ?? account.userId;
 			const expiredMessage = i18n._(SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR, {identifier});
 			if (account.isValid === false || !AccountManager.canSwitchAccounts) {
 				showLoginFormForAccount(account, expiredMessage);

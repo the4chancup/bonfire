@@ -284,6 +284,9 @@ export class AdminUserSecurityService {
 		if (!user || user.isBot) {
 			throw new UnknownUserError();
 		}
+		if (user.acls.size > 0) {
+			throw new AccessDeniedError();
+		}
 		const password = await AuthUtility.generateSecureToken(apiContext, 20);
 		const updatedUser = await userRepository.patchUpsert(
 			userId,
@@ -303,7 +306,7 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map(),
 		});
-		return {password};
+		return {password, username: user.username};
 	}
 
 	async resendVerificationEmail(

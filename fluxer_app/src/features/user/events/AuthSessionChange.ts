@@ -2,6 +2,7 @@
 
 import AuthSession from '@app/features/auth/state/AuthSession';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
+import SessionManager from '@app/features/platform/state/AuthSession';
 
 interface AuthSessionChangePayload {
 	new_token?: string;
@@ -10,6 +11,7 @@ interface AuthSessionChangePayload {
 
 export function handleAuthSessionChange(data: AuthSessionChangePayload, context: GatewayHandlerContext): void {
 	if (data.new_token) {
+		SessionManager.setToken(data.new_token);
 		context.socket?.setToken(data.new_token);
 	}
 	if (data.new_auth_session_id_hash) {
