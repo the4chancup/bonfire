@@ -98,7 +98,7 @@ interface ApplicationDetailRemoteValues {
 }
 
 const APPLICATIONS_TAB_ID = 'applications';
-const AVAILABLE_SCOPES = OAuth2Scopes;
+const AVAILABLE_SCOPES = OAuth2Scopes.filter((scope) => scope !== 'email');
 const APPLICATION_DETAIL_ERROR_PATH_MAP: Partial<Record<string, Path<ApplicationDetailFormValues>>> = {
 	redirect_uris: 'redirectUriInputs',
 };

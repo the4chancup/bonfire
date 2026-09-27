@@ -37,15 +37,16 @@ export const DataExportTabContent: React.FC = observer(() => {
 	const refreshHarvest = useCallback(() => {
 		UserCommands.getLatestHarvest()
 			.then(setLatestHarvest)
-			.catch(() => setLatestHarvest(null));
+			.catch(() => {});
 	}, []);
 	useEffect(refreshHarvest, [refreshHarvest]);
 	const harvestInProgress = latestHarvest?.status === 'pending' || latestHarvest?.status === 'processing';
+	const harvestPoll = harvestInProgress || latestHarvest?.status === 'failed';
 	useEffect(() => {
-		if (!harvestInProgress) return;
+		if (!harvestPoll) return;
 		const timer = setInterval(refreshHarvest, 10_000);
 		return () => clearInterval(timer);
-	}, [harvestInProgress, refreshHarvest]);
+	}, [harvestPoll, refreshHarvest]);
 	const handleOpen = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (

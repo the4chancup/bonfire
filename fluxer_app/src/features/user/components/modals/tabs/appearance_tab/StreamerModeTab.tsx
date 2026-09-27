@@ -25,7 +25,7 @@ const IF_STREAMER_MODE_IS_ENABLED_DESCRIPTOR = msg({
 	comment: 'Legend for streaming privacy behavior settings.',
 });
 const HIDE_PERSONAL_INFORMATION_DESCRIPTOR = msg({
-	message: 'Mask private account details like email, linked accounts, and notes',
+	message: 'Mask private account details like linked accounts and notes',
 	comment: 'Label for a streaming privacy settings toggle.',
 });
 const HIDE_INVITE_LINKS_DESCRIPTOR = msg({

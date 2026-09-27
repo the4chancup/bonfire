@@ -313,8 +313,8 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							{isDiscoverable && (
 								<p data-flx="guild.guild-tabs.guild-moderation-tab.p--3">
 									<Trans>
-										Communities listed in Discovery require at least email verification. None cannot be selected while
-										Discovery is enabled.
+										Communities listed in Discovery require at least the Low verification level. None cannot be selected
+										while Discovery is enabled.
 									</Trans>
 								</p>
 							)}
