@@ -37,13 +37,18 @@ const BUILT_IN_SEARCH_ENGINES: ReadonlyArray<Omit<SearchEngine, 'enabled'>> = [
 		isBuiltIn: true,
 	},
 	{
+		id: 'implyingrigged',
+		name: 'Rigged Wiki',
+		urlTemplate: 'https://implyingrigged.info/w/index.php?search={query}',
+		isBuiltIn: true,
+	},
+	{
 		id: 'youtube',
 		name: 'YouTube',
 		urlTemplate: 'https://www.youtube.com/results?search_query={query}',
 		isBuiltIn: true,
 	},
 	{id: 'github', name: 'GitHub', urlTemplate: 'https://github.com/search?q={query}', isBuiltIn: true},
-	{id: 'reddit', name: 'Reddit', urlTemplate: 'https://www.reddit.com/search/?q={query}', isBuiltIn: true},
 ];
 export const SUGGESTED_DEFAULT_SEARCH_ENGINE_ID = 'google';
 
@@ -59,7 +64,7 @@ class SearchEngines {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void makePersistent(this, 'SearchEngine', ['engines'], {version: 2});
+		void makePersistent(this, 'SearchEngine', ['engines'], {version: 3});
 	}
 
 	get enabledEngines(): ReadonlyArray<SearchEngine> {

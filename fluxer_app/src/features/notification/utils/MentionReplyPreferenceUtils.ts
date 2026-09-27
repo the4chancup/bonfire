@@ -43,5 +43,5 @@ export function getDefaultReplyMention(params: {
 	const preference = resolveMentionReplyPreference({authorId, guildId});
 	if (preference === MentionReplyPreferences.PREFER_MENTION) return true;
 	if (preference === MentionReplyPreferences.PREFER_NO_MENTION) return false;
-	return fallbackMention ?? true;
+	return fallbackMention ?? false;
 }

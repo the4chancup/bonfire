@@ -347,7 +347,7 @@ export function createMessageActionHandlers(
 	};
 	const handleReply = (event?: React.MouseEvent | React.KeyboardEvent) => {
 		requestMessageReply(message, {
-			mention: !event?.shiftKey && !message.isCurrentUserAuthor() && sourceChannel?.guildId != null,
+			mention: !!event?.shiftKey && !message.isCurrentUserAuthor() && sourceChannel?.guildId != null,
 			sourceChannel,
 		});
 		onClose?.();

@@ -71,6 +71,7 @@ import {
 	type SlashSlotChoiceContext,
 } from '@app/features/lexical/composer/slashSlots';
 import type {SlashSlotResolvers} from '@app/features/lexical/composer/slashSlotValidation';
+import {pointOutsideNonEditable} from '@app/features/lexical/composer/utils/LineBoundarySelection';
 import {registerContextMenuUndoRedo} from '@app/features/lexical/LexicalUndoRedoRegistry';
 import ChatInputSettings from '@app/features/messaging/state/ChatInputSettings';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
@@ -180,6 +181,29 @@ function moveSelectionToLineBoundary(event: React.KeyboardEvent<HTMLElement>): b
 		return false;
 	}
 	selection.modify(event.shiftKey ? 'extend' : 'move', event.key === 'Home' ? 'backward' : 'forward', 'lineboundary');
+	if (selection.anchorNode != null && selection.focusNode != null) {
+		const forward = event.key === 'End';
+		const [anchorNode, anchorOffset] = pointOutsideNonEditable(
+			selection.anchorNode,
+			selection.anchorOffset,
+			event.currentTarget,
+			forward,
+		);
+		const [focusNode, focusOffset] = pointOutsideNonEditable(
+			selection.focusNode,
+			selection.focusOffset,
+			event.currentTarget,
+			forward,
+		);
+		if (
+			anchorNode !== selection.anchorNode ||
+			anchorOffset !== selection.anchorOffset ||
+			focusNode !== selection.focusNode ||
+			focusOffset !== selection.focusOffset
+		) {
+			selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+		}
+	}
 	event.preventDefault();
 	return true;
 }
