@@ -166,6 +166,61 @@ describe('Bonfire account model', () => {
 				.expect(400)
 				.execute();
 		});
+		it('renames a legacy non-zero discriminator account to #0000', async () => {
+			// self-hosted keeps feature_custom_discriminator on; enable it via the admin route
+			const admin = await setUserACLs(harness, await createTestAccount(harness), ['*']);
+			const current = await createBuilder<{
+				limit_config: {rules: Array<{id: string; filters: unknown; limits: Record<string, number>}>; traitDefinitions: Array<string>};
+			}>(harness, admin.token)
+				.get('/admin/limit-config')
+				.expect(200)
+				.execute();
+			try {
+				await createBuilder(harness, admin.token)
+					.put('/admin/limit-config')
+					.body({
+						limit_config: {
+							traitDefinitions: current.limit_config.traitDefinitions,
+							rules: current.limit_config.rules.map((rule) => ({
+								id: rule.id,
+								filters: rule.filters,
+								limits:
+									rule.id === 'default'
+										? {...rule.limits, feature_custom_discriminator: 1}
+										: rule.limits,
+							})),
+						},
+					})
+					.expect(200)
+					.execute();
+				const account = await createTestAccount(harness);
+				await createBuilderWithoutAuth(harness)
+					.patch(`/test/users/${account.userId}/discriminator`)
+					.body({discriminator: 8522})
+					.expect(200)
+					.execute();
+				const newName = createUniqueUsername('legacyrename');
+				const me = await createBuilder<{username: string; discriminator: string | number}>(harness, account.token)
+					.patch('/users/@me')
+					.body({username: newName, password: account.password})
+					.expect(200)
+					.execute();
+				expect(me.username).toBe(newName);
+				expect(Number(me.discriminator)).toBe(0);
+				const meAfter = await createBuilder<{username: string; discriminator: string | number}>(harness, account.token)
+					.get('/users/@me')
+					.execute();
+				expect(meAfter.username).toBe(newName);
+				expect(Number(meAfter.discriminator)).toBe(0);
+				const login = await loginUser(harness, {email: newName, password: account.password});
+				expect('token' in login && login.token.length > 0).toBe(true);
+			} finally {
+				await createBuilder(harness, admin.token)
+					.put('/admin/limit-config')
+					.body({limit_config: current.limit_config})
+					.execute();
+			}
+		});
 	});
 
 	describe('admin temporary password', () => {

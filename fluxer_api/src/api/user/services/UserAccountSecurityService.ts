@@ -235,8 +235,8 @@ export class UserAccountSecurityService {
 				newDiscriminator: discriminatorResult.discriminator,
 			};
 		}
-		const discriminatorToUse = normalizedRequestedDiscriminator ?? user.discriminator;
-		if (this.requiresVisionaryForDiscriminator0000(user, discriminatorToUse)) {
+		const discriminatorToUse = normalizedRequestedDiscriminator;
+		if (discriminatorToUse !== undefined && this.requiresVisionaryForDiscriminator0000(user, discriminatorToUse)) {
 			throw InputValidationError.fromCode('discriminator', ValidationErrorCodes.VISIONARY_REQUIRED_FOR_DISCRIMINATOR);
 		}
 		const discriminatorResult = await this.deps.discriminatorService.generateDiscriminator({
@@ -247,9 +247,9 @@ export class UserAccountSecurityService {
 		if (!discriminatorResult.available || discriminatorResult.discriminator === -1) {
 			throw InputValidationError.fromCode(
 				'username',
-				discriminatorToUse !== undefined
-					? ValidationErrorCodes.TAG_ALREADY_TAKEN
-					: ValidationErrorCodes.TOO_MANY_USERS_WITH_USERNAME_TRY_DIFFERENT,
+				discriminatorResult.discriminator === -1
+					? ValidationErrorCodes.TOO_MANY_USERS_WITH_USERNAME_TRY_DIFFERENT
+					: ValidationErrorCodes.TAG_ALREADY_TAKEN,
 			);
 		}
 		return {
