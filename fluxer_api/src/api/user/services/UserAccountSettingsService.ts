@@ -12,6 +12,7 @@ import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/type
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
@@ -200,7 +201,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = isUserAdult(dateOfBirth);
+		const userIsAdult = !instanceCollectsDateOfBirth() || isUserAdult(dateOfBirth);
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
