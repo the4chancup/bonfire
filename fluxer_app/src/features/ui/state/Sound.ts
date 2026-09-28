@@ -5,15 +5,17 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
+import {
+	DEFAULT_ALL_SOUNDS_DISABLED,
+	DEFAULT_MASTER_VOLUME,
+	type SoundSettings,
+	soundSettingsFromMessage,
+	soundSettingsToMessage,
+} from '@app/features/ui/state/SoundSettingsSync';
 import {SoundSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
-export interface SoundSettings {
-	allSoundsDisabled: boolean;
-	disabledSounds: Partial<Record<SoundType, boolean>>;
-	masterVolume: number;
-	soundOverrides: Partial<Record<SoundType, number>>;
-}
+export type {SoundSettings} from '@app/features/ui/state/SoundSettingsSync';
 
 export interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
@@ -44,7 +46,6 @@ interface PendingAutoplayBlockedOneShot {
 	expiresAt: number;
 }
 
-const DEFAULT_MASTER_VOLUME = 100;
 const MAX_VOLUME_PERCENT = 200;
 const GLOBAL_ONE_SHOT_MIN_INTERVAL_MS = 260;
 export const AUTOPLAY_BLOCKED_ONE_SHOT_TTL_MS = 3000;
@@ -154,7 +155,7 @@ class Sound {
 	volume = 0.4;
 	incomingCallActive = false;
 	settings: SoundSettings = {
-		allSoundsDisabled: false,
+		allSoundsDisabled: DEFAULT_ALL_SOUNDS_DISABLED,
 		disabledSounds: {},
 		masterVolume: DEFAULT_MASTER_VOLUME,
 		soundOverrides: {},
@@ -210,29 +211,9 @@ class Sound {
 			schema: SoundSettingsSchema,
 			persist: ['settings', 'syncAcrossDevices'],
 			enabled: () => this.syncAcrossDevices,
-			toMessage: (s) => {
-				const init: {
-					allSoundsDisabled: boolean;
-					masterVolume?: number;
-					disabledSounds: Record<string, boolean>;
-					soundOverrides: Record<string, number>;
-				} = {
-					allSoundsDisabled: s.settings.allSoundsDisabled,
-					disabledSounds: {...s.settings.disabledSounds} as Record<string, boolean>,
-					soundOverrides: {...s.settings.soundOverrides} as Record<string, number>,
-				};
-				if (s.settings.masterVolume !== DEFAULT_MASTER_VOLUME) {
-					init.masterVolume = s.settings.masterVolume;
-				}
-				return init;
-			},
+			toMessage: (s) => soundSettingsToMessage(s.settings),
 			applyMessage: (s, m) => {
-				s.settings = {
-					allSoundsDisabled: m.allSoundsDisabled,
-					masterVolume: m.masterVolume ?? DEFAULT_MASTER_VOLUME,
-					disabledSounds: {...m.disabledSounds} as Partial<Record<SoundType, boolean>>,
-					soundOverrides: {...m.soundOverrides} as Partial<Record<SoundType, number>>,
-				};
+				s.settings = soundSettingsFromMessage(m);
 			},
 		});
 	}

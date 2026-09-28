@@ -64,6 +64,17 @@ describe('SyncedPreferencesCodec', () => {
 		expect(decoded.sound?.disabledSounds).toEqual({ping: true, join: false});
 		expect(decoded.sound?.soundOverrides).toEqual({ping: 0.25});
 	});
+	it('distinguishes an unset sound toggle from an explicit false', () => {
+		const unset = create(SyncedPreferencesSchema, {
+			sound: create(SoundSettingsSchema, {}),
+		});
+		expect(decodeSyncedPreferences(encodeSyncedPreferences(unset)).sound?.allSoundsDisabled).toBeUndefined();
+		const explicitFalse = create(SyncedPreferencesSchema, {
+			sound: create(SoundSettingsSchema, {allSoundsDisabled: false}),
+		});
+		expect(encodeSyncedPreferences(explicitFalse)).not.toBe(encodeSyncedPreferences(unset));
+		expect(decodeSyncedPreferences(encodeSyncedPreferences(explicitFalse)).sound?.allSoundsDisabled).toBe(false);
+	});
 	it('round-trips a populated favorites/gif sub-message and top-level scalar', () => {
 		const original = create(SyncedPreferencesSchema, {
 			sanitizeUrls: true,
