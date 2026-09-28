@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID} from '@app/api/BrandedTypes';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
 
@@ -47,6 +48,7 @@ export interface APIConfig {
 	requestTimeoutMs: number;
 	maxInflightRequests: number;
 	ipBanExemptIps: Array<string>;
+	dmUploadTrustedGuildIds: Array<GuildID>;
 	cassandra: {
 		hosts: string;
 		port: number;

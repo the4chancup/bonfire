@@ -104,6 +104,7 @@ function defaultConfig(): MasterConfig {
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
 				ip_ban_exempt_ips: [],
+				dm_upload_trusted_guild_ids: [],
 				donation_proxy_key: '',
 				presigned_attachment_uploads_enabled: false,
 				presigned_harvest_downloads_enabled: true,

@@ -90,6 +90,7 @@ export interface MasterConfig {
 			request_timeout_ms: number;
 			max_inflight_requests: number;
 			ip_ban_exempt_ips: Array<string>;
+			dm_upload_trusted_guild_ids: Array<string>;
 			donation_proxy_key: string;
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_harvest_downloads_enabled: boolean;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID} from '@app/api/BrandedTypes';
 import type {APIConfig, BlueskyOAuthConfig} from '@app/api/config/APIConfig';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
@@ -91,6 +92,15 @@ function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	return Array.from(normalized);
 }
 
+function normalizeDmUploadTrustedGuildIds(values: Array<string>) {
+	return values.map((value) => {
+		if (!/^\d+$/.test(value)) {
+			throw new Error(`FLUXER_API_DM_UPLOAD_TRUSTED_GUILD_IDS contains an invalid guild id: ${value}`);
+		}
+		return createGuildID(BigInt(value));
+	});
+}
+
 function mapPushProviderApps(
 	apps:
 		| Array<{
@@ -160,6 +170,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
 		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
+		dmUploadTrustedGuildIds: normalizeDmUploadTrustedGuildIds(master.services.api.dm_upload_trusted_guild_ids),
 		cassandra: {
 			hosts: cassandraSource?.hosts.join(',') ?? '',
 			port: cassandraSource?.port ?? 9042,

@@ -47,6 +47,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -463,8 +464,32 @@ export class AttachmentUploadService {
 		if (guild) {
 			await checkPermission(Permissions.SEND_MESSAGES | Permissions.ATTACH_FILES);
 			assertGuildMemberCanCommunicate(member);
+		} else {
+			await this.assertTrustedForDirectMessageUploads(userId);
 		}
 		return {channel, guild};
+	}
+
+	private async assertTrustedForDirectMessageUploads(userId: UserID): Promise<void> {
+		for (const guildId of Config.dmUploadTrustedGuildIds) {
+			let allowed = false;
+			try {
+				allowed = await this.gatewayService.checkPermission({
+					guildId,
+					userId,
+					permission: Permissions.ATTACH_FILES,
+				});
+			} catch (error) {
+				if (error instanceof UnknownGuildError) {
+					continue;
+				}
+				throw error;
+			}
+			if (allowed) {
+				return;
+			}
+		}
+		throw new MissingPermissionsError();
 	}
 
 	private async getWebhookUploadChannel(channelId: ChannelID): Promise<{
