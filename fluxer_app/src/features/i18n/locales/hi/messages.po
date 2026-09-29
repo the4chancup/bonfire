@@ -40355,3 +40355,13 @@ msgstr "ज़ूम इन करें"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "ज़ूम आउट करें"
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts:13
+msgid "Edit your messages above or below"
+msgstr "अपने संदेशों को ऊपर या नीचे संपादित करें"
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts:29
+msgid "Reply to messages above or below"
+msgstr "ऊपर या नीचे के संदेशों का जवाब दें"
