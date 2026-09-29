@@ -109,7 +109,8 @@ describe('Admin user directory', () => {
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
-		test('returns the account for the email selector with USER_VIEW_EMAIL ACL', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('returns the account for the email selector with USER_VIEW_EMAIL ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL]);
 			const target = await createTestAccount(harness);
@@ -141,7 +142,8 @@ describe('Admin user directory', () => {
 			expect(found).toBeDefined();
 			expect(found?.last_active_ip).toBe('203.0.113.9');
 		});
-		test('rejects a resolve value containing an at sign without USER_VIEW_EMAIL ACL', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects a resolve value containing an at sign without USER_VIEW_EMAIL ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_IP]);
 			const target = await createTestAccount(harness);
@@ -150,7 +152,8 @@ describe('Admin user directory', () => {
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
-		test('resolves an email address with USER_VIEW_EMAIL ACL', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('resolves an email address with USER_VIEW_EMAIL ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL]);
 			const target = await createTestAccount(harness);

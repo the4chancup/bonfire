@@ -26,7 +26,8 @@ describe('Password reset flow', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('allows forgot and reset password flow with token reuse rejection and session invalidation', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('allows forgot and reset password flow with token reuse rejection and session invalidation', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/forgot')

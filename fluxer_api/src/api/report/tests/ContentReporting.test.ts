@@ -203,7 +203,7 @@ describe('Content Reporting', () => {
 			expect(reportDetail.report_id).toBe(report.report_id);
 			expect(reportDetail.mutual_dm_channel_id).toBe(mutualDm.id);
 		});
-		test('sends a localized system DM and email marker when a report is reviewed with a public comment', async () => {
+		test('sends a localized system DM when a report is reviewed with a public comment', async () => {
 			const reporter = await createTestAccount(harness);
 			const targetUser = await createTestAccount(harness);
 			let admin = await createTestAccount(harness);
@@ -221,7 +221,6 @@ describe('Content Reporting', () => {
 				})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			await clearTestEmails(harness);
 			const publicComment = 'Nous avons examiné votre signalement et pris des mesures.';
 			await createBuilder<{
 				report_id: string;
@@ -236,11 +235,6 @@ describe('Content Reporting', () => {
 				})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			const sentEmails = await listTestEmails(harness, {recipient: reporter.email});
-			const email = findLastTestEmail(sentEmails, 'report_resolved');
-			expect(email).not.toBeNull();
-			expect(email?.metadata['report_id']).toBe(report.report_id);
-			expect(email?.metadata['public_comment']).toBe(publicComment);
 			const systemMessages = await listSystemDmMessages(harness, reporter.token);
 			expect(systemMessages).toHaveLength(1);
 			const template = getEmailTemplate('report_resolved', 'fr', {

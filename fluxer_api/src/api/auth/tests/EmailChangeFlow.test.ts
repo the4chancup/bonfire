@@ -161,7 +161,8 @@ describe('Email change flow', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('uses ticketed dual-code flow with sudo and proof token', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('uses ticketed dual-code flow with sudo and proof token', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
@@ -224,7 +225,8 @@ describe('Email change flow', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 	});
-	it('request-new fails without original_proof', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('request-new fails without original_proof', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		const newEmail = `integration-no-proof-${Date.now()}@example.com`;
@@ -239,7 +241,8 @@ describe('Email change flow', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 	});
-	it('verify-new fails without original_proof', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('verify-new fails without original_proof', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
@@ -286,7 +289,8 @@ describe('Email change flow', () => {
 		expect(startResp.original_proof).toBeDefined();
 		expect(startResp.original_proof!.length).toBeGreaterThan(0);
 	});
-	it('verify-original returns original_proof for verified email accounts', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('verify-original returns original_proof for verified email accounts', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
@@ -319,7 +323,8 @@ describe('Email change flow', () => {
 		);
 		expect(newReq.new_email).toBe(newEmail);
 	});
-	it('keeps email_token valid when another account grabs the address before final apply', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('keeps email_token valid when another account grabs the address before final apply', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		const emails = await listTestEmails(harness, {recipient: account.email});
@@ -370,7 +375,8 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
-	it('allows suspicious accounts to complete email change and clears email-related flags', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('allows suspicious accounts to complete email change and clears email-related flags', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post(`/test/users/${account.userId}/security-flags`)
@@ -429,7 +435,8 @@ describe('Email change flow', () => {
 		expect(updated.required_actions).toContain('REQUIRE_VERIFIED_PHONE');
 		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
 	});
-	it('does not add suspicion on email change for users who have ever purchased', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('does not add suspicion on email change for users who have ever purchased', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post(`/test/users/${account.userId}/premium`)
@@ -485,7 +492,8 @@ describe('Email change flow', () => {
 		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
 		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
-	it('re-evaluates plus-tagged email changes on claimed accounts', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('re-evaluates plus-tagged email changes on claimed accounts', async () => {
 		const account = await createTestAccount(harness);
 		let evaluateCalls = 0;
 		setInjectedRegistrationRiskEvaluator(
@@ -529,7 +537,8 @@ describe('Email change flow', () => {
 		expect(evaluateCalls).toBe(1);
 		expect(updated.required_actions).toContain('REQUIRE_VERIFIED_PHONE');
 	});
-	it('does not re-evaluate ordinary claimed email changes', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('does not re-evaluate ordinary claimed email changes', async () => {
 		const account = await createTestAccount(harness);
 		let evaluateCalls = 0;
 		setInjectedRegistrationRiskEvaluator(
@@ -573,7 +582,8 @@ describe('Email change flow', () => {
 		expect(evaluateCalls).toBe(0);
 		expect(updated.required_actions ?? []).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
-	it('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
 		const account = await createTestAccount(harness);
 		const secret = createTotpSecret();
 		await createBuilder(harness, account.token)
@@ -663,7 +673,8 @@ describe('Email change flow', () => {
 		expect(updated.email).toBe(newEmail);
 		expect(updated.mfa_enabled).toBe(true);
 	});
-	it('dedicated apply endpoint: MFA users see has_mfa + methods and can succeed with TOTP', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('dedicated apply endpoint: MFA users see has_mfa + methods and can succeed with TOTP', async () => {
 		const account = await createTestAccount(harness);
 		const secret = createTotpSecret();
 		await createBuilder(harness, account.token)
@@ -750,7 +761,8 @@ describe('Email change flow', () => {
 		expect(updated.email).toBe(newEmail);
 		expect(updated.mfa_enabled).toBe(true);
 	});
-	it('dedicated apply endpoint succeeds with password for non-MFA users', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('dedicated apply endpoint succeeds with password for non-MFA users', async () => {
 		const account = await createTestAccount(harness);
 		const startResp = await startEmailChange(harness, account, account.password);
 		const emails = await listTestEmails(harness, {recipient: account.email});
@@ -838,7 +850,8 @@ describe('Email change flow', () => {
 		expect(updated.verified).toBe(true);
 		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
-	it('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
 		const account = await createTestAccount(harness);
 		const secret = createTotpSecret();
 		await createBuilder(harness, account.token)

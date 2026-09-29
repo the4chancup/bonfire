@@ -53,7 +53,8 @@ describe('Admin Search Field Coverage', () => {
 		await harness.shutdown();
 	});
 	describe('user search by email', () => {
-		test('searching by exact email returns only the matching user', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('searching by exact email returns only the matching user', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:email']);
 			const uniqueEmail = `precise-email-${Date.now()}@searchtest.example`;
@@ -68,7 +69,8 @@ describe('Admin Search Field Coverage', () => {
 			expect(found).toBeDefined();
 			expect(found!.email).toBe(uniqueEmail);
 		});
-		test('searching by email does not return users with different emails', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('searching by email does not return users with different emails', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			const emailA = `alpha-${Date.now()}@emailsearch.example`;
@@ -84,7 +86,8 @@ describe('Admin Search Field Coverage', () => {
 			expect(foundA).toBeDefined();
 			expect(foundB).toBeUndefined();
 		});
-		test('searching by partial email domain returns matching users', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('searching by partial email domain returns matching users', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			const domain = `partialdomain${Date.now()}.example`;
@@ -194,19 +197,18 @@ describe('Admin Search Field Coverage', () => {
 		test('user search response includes all expected admin fields', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:email']);
-			const email = `fields-check-${Date.now()}@fieldtest.example`;
 			const username = `fieldcheck_${Date.now()}`;
-			const targetUser = await createTestAccount(harness, {email, username});
+			const targetUser = await createTestAccount(harness, {username});
 			await setContactInfo(harness, targetUser.userId, {has_verified_phone: true});
 			const result = await createBuilder<UserSearchResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?q=${encodeURIComponent(email)}&limit=10&offset=0`)
+				.get(`/admin/users?q=${encodeURIComponent(username)}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const found = result.users.find((u) => u.id === targetUser.userId);
 			expect(found).toBeDefined();
 			expect(found!.id).toBe(targetUser.userId);
 			expect(found!.username).toBe(username);
-			expect(found!.email).toBe(email);
+			expect(found!.email).toBeNull();
 			expect(found!.has_verified_phone).toBe(true);
 			expect(found!).toHaveProperty('discriminator');
 			expect(found!).toHaveProperty('global_name');
@@ -223,18 +225,10 @@ describe('Admin Search Field Coverage', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			const ts = Date.now();
-			const emailA = `vortexfind-${ts}@alphadomain.example`;
-			const emailB = `nebulaseek-${ts}@betadomain.example`;
 			const usernameA = `vortexfox_${ts}`;
 			const usernameB = `nebulawolf_${ts}`;
-			const userA = await createTestAccount(harness, {email: emailA, username: usernameA});
-			const userB = await createTestAccount(harness, {email: emailB, username: usernameB});
-			const searchByEmailA = await createBuilder<UserSearchResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?q=${encodeURIComponent(emailA)}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(searchByEmailA.users.find((u) => u.id === userA.userId)).toBeDefined();
-			expect(searchByEmailA.users.find((u) => u.id === userB.userId)).toBeUndefined();
+			const userA = await createTestAccount(harness, {username: usernameA});
+			const userB = await createTestAccount(harness, {username: usernameB});
 			const searchByUsernameB = await createBuilder<UserSearchResponse>(harness, `${admin.token}`)
 				.get(`/admin/users?q=${encodeURIComponent(usernameB)}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)

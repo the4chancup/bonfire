@@ -37,7 +37,8 @@ describe('UserContactChangeLogService', () => {
 		await harness?.shutdown();
 	});
 	describe('email change operations', () => {
-		test('direct email change is rejected - requires email_token flow', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('direct email change is rejected - requires email_token flow', async () => {
 			const account = await createTestAccount(harness, {
 				email: 'original@example.com',
 			});

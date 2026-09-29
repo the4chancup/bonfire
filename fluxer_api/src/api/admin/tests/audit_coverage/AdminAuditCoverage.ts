@@ -37,6 +37,7 @@ interface AdminAuditCoverageCaseBase {
 	name?: string;
 	search?: 'disabled' | 'enabled';
 	auditLogReason?: unknown;
+	skip?: string;
 }
 
 export interface AdminAuditAuditedCase extends AdminAuditCoverageCaseBase {
@@ -86,7 +87,8 @@ export function describeAdminAuditCoverage(area: string, cases: ReadonlyArray<Ad
 			const label = coverageCase.name
 				? `${adminAuditCaseShape(coverageCase)} (${coverageCase.name})`
 				: adminAuditCaseShape(coverageCase);
-			test(label, async () => {
+			const runner = coverageCase.skip ? test.skip : test;
+			runner(label, async () => {
 				harness = await createApiTestHarness({search: coverageCase.search ?? 'disabled'});
 				const admin = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.WILDCARD]);
 				const prepared = await coverageCase.prepare({harness, admin});

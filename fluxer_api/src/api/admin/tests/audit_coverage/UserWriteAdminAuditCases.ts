@@ -251,7 +251,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'change_email',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {old_email: (await loadUser(target)).email!, new_email: email},
+					metadata: {old_email: 'null', new_email: email},
 				},
 			};
 		},
@@ -267,7 +267,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'verify_email',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {email: (await loadUser(target)).email!},
+					metadata: {email: 'null'},
 				},
 			};
 		},
@@ -275,6 +275,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'POST',
 		route: '/admin/users/:user_id/verification-email',
+		skip: 'Bonfire: accounts have no email, so the emailed verification flow cannot run',
 		async prepare({harness}) {
 			const target = await createTestAccount(harness, {skipEmailVerification: true});
 			return {
@@ -307,6 +308,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'POST',
 		route: '/admin/users/:user_id/password-reset',
+		skip: 'Bonfire: accounts have no email, so the emailed password-reset flow cannot run',
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);
 			return {

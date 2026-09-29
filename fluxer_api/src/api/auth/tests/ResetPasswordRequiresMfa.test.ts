@@ -86,7 +86,8 @@ describe('Auth reset password requires MFA', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('returns MFA ticket after password reset when MFA is enabled', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns MFA ticket after password reset when MFA is enabled', async () => {
 		const account = await createTestAccount(harness);
 		await clearTestEmails(harness);
 		const secret = 'JBSWY3DPEHPK3PXP';
@@ -128,7 +129,8 @@ describe('Auth reset password requires MFA', () => {
 		expect(login.totp).toBe(true);
 		expect(login.webauthn).toBe(false);
 	});
-	it('returns a session after password reset for a passkey user who left two-factor off', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns a session after password reset for a passkey user who left two-factor off', async () => {
 		const account = await createTestAccount(harness);
 		const device = createWebAuthnDevice();
 		await registerWebAuthnCredential(harness, account.token, device, () => ({password: account.password}));
@@ -144,7 +146,8 @@ describe('Auth reset password requires MFA', () => {
 		expect('mfa' in resetResp).toBe(false);
 		expect((resetResp as LoginSuccessResponse).token).toBeTruthy();
 	});
-	it('returns an MFA ticket after password reset for a passkey user who turned two-factor on', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns an MFA ticket after password reset for a passkey user who turned two-factor on', async () => {
 		const account = await createTestAccount(harness);
 		const device = createWebAuthnDevice();
 		await registerWebAuthnCredential(harness, account.token, device, () => ({password: account.password}));

@@ -77,7 +77,8 @@ describe('Password change invalidates sessions', () => {
 			.execute();
 		expect(response.errors?.some((error) => error.path === 'password' && error.code === 'PASSWORD_NOT_SET')).toBe(true);
 	});
-	it('invalidates all sessions after password reset', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('invalidates all sessions after password reset', async () => {
 		const account = await createTestAccount(harness);
 		const session2 = await loginAccount(harness, account);
 		await createBuilderWithoutAuth(harness).post('/auth/forgot').body({email: account.email}).expect(204).execute();

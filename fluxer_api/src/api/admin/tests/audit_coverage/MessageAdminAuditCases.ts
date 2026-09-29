@@ -119,6 +119,7 @@ export const MessageAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'POST',
 		route: '/admin/messages/ncmec-reports',
+		skip: 'Bonfire: NCMEC submission requires a reporter email and Bonfire admins have none',
 		auditLogReason: expect.stringMatching(/^NCMEC Report \S+ - \S+$/),
 		async prepare({harness}) {
 			const {author, channelId} = await createAuthorChannel(harness);

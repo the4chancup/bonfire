@@ -94,7 +94,8 @@ describe('PasswordChangeFlow', () => {
 		await harness?.shutdown();
 	});
 	describe('start', () => {
-		test('sends verification email and returns ticket', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('sends verification email and returns ticket', async () => {
 			const account = await createTestAccount(harness);
 			const result = await startPasswordChange(harness, account.token);
 			expect(result.ticket).toBeDefined();
@@ -115,7 +116,8 @@ describe('PasswordChangeFlow', () => {
 		});
 	});
 	describe('resend', () => {
-		test('rejects during cooldown period', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects during cooldown period', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			await createBuilder(harness, account.token)
@@ -141,7 +143,8 @@ describe('PasswordChangeFlow', () => {
 		});
 	});
 	describe('verify', () => {
-		test('returns verification_proof with correct code', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('returns verification_proof with correct code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			const code = await getVerificationCode(harness, account.email!);
@@ -149,7 +152,8 @@ describe('PasswordChangeFlow', () => {
 			expect(verifyResult.verification_proof).toBeDefined();
 			expect(typeof verifyResult.verification_proof).toBe('string');
 		});
-		test('rejects with incorrect code', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects with incorrect code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			const {json} = await createBuilder(harness, account.token)
@@ -173,7 +177,8 @@ describe('PasswordChangeFlow', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
-		test('returns same proof on repeated verification with correct code', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('returns same proof on repeated verification with correct code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			const code = await getVerificationCode(harness, account.email!);
@@ -190,18 +195,21 @@ describe('PasswordChangeFlow', () => {
 		});
 	});
 	describe('complete', () => {
-		test('succeeds with correct proof and passwords', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('succeeds with correct proof and passwords', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
 		});
-		test('succeeds when the user does not have a password set', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('succeeds when the user does not have a password set', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await createBuilderWithoutAuth(harness).post(`/test/users/${account.userId}/unclaim`).body({}).execute();
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
 		});
-		test('rejects with invalid verification_proof', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects with invalid verification_proof', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket} = await runFullVerification(harness, account);
 			const {json} = await createBuilder(harness, account.token)
@@ -221,7 +229,8 @@ describe('PasswordChangeFlow', () => {
 			};
 			expect(body.errors?.[0]?.code).toBe('INVALID_PROOF_TOKEN');
 		});
-		test('rejects when ticket has not been verified', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects when ticket has not been verified', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			const {json} = await createBuilder(harness, account.token)
@@ -241,7 +250,8 @@ describe('PasswordChangeFlow', () => {
 			};
 			expect(body.errors?.[0]?.code).toBe('INVALID_OR_EXPIRED_TICKET');
 		});
-		test('rejects reusing a completed ticket', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('rejects reusing a completed ticket', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
@@ -267,7 +277,8 @@ describe('PasswordChangeFlow', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
-		test('invalidates existing sessions after password change', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('invalidates existing sessions after password change', async () => {
 			const account = await createTestAccount(harness);
 			const originalToken = account.token;
 			const otherLogin = await loginUser(harness, {
@@ -296,7 +307,8 @@ describe('PasswordChangeFlow', () => {
 			expect(result.auth_session_id_hash).toBeTruthy();
 			await createBuilder(harness, result.token).get('/users/@me').expect(HTTP_STATUS.OK).execute();
 		});
-		test('user can log in with new password after change', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('user can log in with new password after change', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
@@ -307,7 +319,8 @@ describe('PasswordChangeFlow', () => {
 			expect('token' in login).toBe(true);
 			expect('mfa' in login).toBe(false);
 		});
-		test('old password no longer works after change', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('old password no longer works after change', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
 			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
@@ -330,7 +343,8 @@ describe('PasswordChangeFlow', () => {
 		});
 	});
 	describe('full flow', () => {
-		test('start, verify, and complete password change end-to-end', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('start, verify, and complete password change end-to-end', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
 			expect(startResult.ticket).toBeDefined();

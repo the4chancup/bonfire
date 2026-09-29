@@ -279,7 +279,8 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 		});
 	});
 	describe('POST /admin/users/{user_id}/verification-email', () => {
-		test('sends verification email for unverified user', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		test.skip('sends verification email for unverified user', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);

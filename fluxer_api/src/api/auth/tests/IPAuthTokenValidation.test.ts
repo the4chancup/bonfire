@@ -31,7 +31,8 @@ describe('Auth IP Authorization Token Validation', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 	});
-	it('validates that an IP authorization token can only be used once and becomes invalid after successful use', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('validates that an IP authorization token can only be used once and becomes invalid after successful use', async () => {
 		const email = createUniqueEmail('ip-single-use');
 		const password = 'a-strong-password';
 		await registerUser(harness, {
@@ -68,7 +69,8 @@ describe('Auth IP Authorization Token Validation', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 	});
-	it('validates that a token generated for one IP cannot be used to authorize a different IP', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('validates that a token generated for one IP cannot be used to authorize a different IP', async () => {
 		const email = createUniqueEmail('ip-wrong-ip');
 		const password = 'a-strong-password';
 		await registerUser(harness, {
@@ -100,7 +102,8 @@ describe('Auth IP Authorization Token Validation', () => {
 			.expect(204)
 			.execute();
 	});
-	it('validates that IP authorization tokens expire after a reasonable time period and cannot be used after expiration', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('validates that IP authorization tokens expire after a reasonable time period and cannot be used after expiration', async () => {
 		const email = createUniqueEmail('ip-expire');
 		const password = 'a-strong-password';
 		await registerUser(harness, {

@@ -13,7 +13,8 @@ import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
-describe('Auth case-insensitive email', () => {
+// Bonfire: accounts have no email, so this emailed flow cannot run.
+describe.skip('Auth case-insensitive email', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
 		harness = await createAuthHarness();

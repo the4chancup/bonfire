@@ -111,6 +111,7 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		method: 'GET',
 		route: '/admin/users',
 		name: 'email',
+		skip: 'Bonfire: accounts have no email, so the email search selector finds nothing',
 		async prepare({harness}) {
 			const target = await createTestAccount(harness);
 			return {

@@ -56,7 +56,8 @@ describe('Auth IP Authorization Resend', () => {
 		return ipAuthResp;
 	}
 	describe('Resend rate limit enforcement', () => {
-		it('returns 429 when resend is attempted immediately after ticket creation', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns 429 when resend is attempted immediately after ticket creation', async () => {
 			const email = createUniqueEmail('ip-resend-immediate');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -77,7 +78,8 @@ describe('Auth IP Authorization Resend', () => {
 				.execute();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_COOLDOWN);
 		});
-		it('returns resend_available_in and a matching Retry-After header when rate limited', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns resend_available_in and a matching Retry-After header when rate limited', async () => {
 			const email = createUniqueEmail('ip-resend-cooldown');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -104,7 +106,8 @@ describe('Auth IP Authorization Resend', () => {
 		});
 	});
 	describe('Multiple resend attempts handling', () => {
-		it('returns 429 for multiple consecutive resend attempts', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns 429 for multiple consecutive resend attempts', async () => {
 			const email = createUniqueEmail('ip-multi-resend');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -128,7 +131,8 @@ describe('Auth IP Authorization Resend', () => {
 		});
 	});
 	describe('Resend with already-used ticket', () => {
-		it('returns 400 when resend flag is already set on the ticket', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns 400 when resend flag is already set on the ticket', async () => {
 			const email = createUniqueEmail('ip-resend-used');
 			const password = 'a-strong-password';
 			const reg = await registerUser(harness, {
@@ -165,7 +169,8 @@ describe('Auth IP Authorization Resend', () => {
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED);
 			expect(response.headers.get('Retry-After')).toBeNull();
 		});
-		it('returns 400 after IP has already been authorized', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns 400 after IP has already been authorized', async () => {
 			const email = createUniqueEmail('ip-resend-after-auth');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -217,7 +222,8 @@ describe('Auth IP Authorization Resend', () => {
 			expect(errorResp.code).toBeDefined();
 			expect(errorResp.message).toBeDefined();
 		});
-		it('returns 400 when ticket has expired', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns 400 when ticket has expired', async () => {
 			const email = createUniqueEmail('ip-ticket-expired');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -243,7 +249,8 @@ describe('Auth IP Authorization Resend', () => {
 		});
 	});
 	describe('Resend response format validation', () => {
-		it('returns proper error structure with code and message on rate limit', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns proper error structure with code and message on rate limit', async () => {
 			const email = createUniqueEmail('ip-resend-format');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -275,7 +282,8 @@ describe('Auth IP Authorization Resend', () => {
 			expect(typeof errorResp.code).toBe('string');
 			expect(typeof errorResp.message).toBe('string');
 		});
-		it('returns proper error structure when resend limit exceeded', async () => {
+		// Bonfire: accounts have no email, so this emailed flow cannot run.
+		it.skip('returns proper error structure when resend limit exceeded', async () => {
 			const email = createUniqueEmail('ip-limit-format');
 			const password = 'a-strong-password';
 			const reg = await registerUser(harness, {

@@ -22,7 +22,8 @@ describe('Auth IP Authorization Poll', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('returns not completed when authorization is pending', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns not completed when authorization is pending', async () => {
 		const email = createUniqueEmail('ip-poll');
 		const password = 'a-strong-password';
 		const reg = await registerUser(harness, {
@@ -58,7 +59,8 @@ describe('Auth IP Authorization Poll', () => {
 			.execute();
 		expect(pollBefore).toMatchObject({completed: false});
 	});
-	it('returns completed with credentials after authorization', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns completed with credentials after authorization', async () => {
 		const email = createUniqueEmail('ip-poll-complete');
 		const password = 'a-strong-password';
 		const reg = await registerUser(harness, {
@@ -109,7 +111,8 @@ describe('Auth IP Authorization Poll', () => {
 			user_id: reg.user_id,
 		});
 	});
-	it('returns completed after authorization even when ticket cache is deleted', async () => {
+	// Bonfire: accounts have no email, so this emailed flow cannot run.
+	it.skip('returns completed after authorization even when ticket cache is deleted', async () => {
 		const email = createUniqueEmail('ip-poll-ticket-deleted');
 		const password = 'a-strong-password';
 		const reg = await registerUser(harness, {

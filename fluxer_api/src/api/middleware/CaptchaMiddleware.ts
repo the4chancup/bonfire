@@ -86,7 +86,7 @@ async function requestUserHasCaptchaExemptFlag(ctx: Context<HonoEnv>): Promise<b
 		if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
 		const email = (body as Record<string, unknown>).email;
 		if (typeof email !== 'string') return false;
-		const user = await ctx.get('userRepository').findByEmail(email);
+		const user = await ctx.get('userRepository').findByUsernameDiscriminator(email, 0);
 		return userHasCaptchaExemptFlag(user);
 	} catch {
 		return false;

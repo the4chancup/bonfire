@@ -101,7 +101,8 @@ describe('User Username Case Update', () => {
 			expect(updated.json.discriminator).toBe(initialUser.discriminator);
 		});
 	});
-	test('non-premium username change always rerolls discriminator even when explicitly echoed', async () => {
+	// Bonfire: every account has discriminator #0000 with unique usernames, so discriminator changes cannot happen.
+	test.skip('non-premium username change always rerolls discriminator even when explicitly echoed', async () => {
 		await runCaseUpdateTest(harness, async ({account, initialUser}) => {
 			const newUsername = `preserve${initialUser.username.slice(0, Math.min(initialUser.username.length, 24))}`;
 			const updated = await updateUserProfile(harness, account.token, {
@@ -113,7 +114,8 @@ describe('User Username Case Update', () => {
 			expect(updated.json.discriminator).not.toBe(initialUser.discriminator);
 		});
 	});
-	test('non-premium username change rerolls when requested discriminator is already taken', async () => {
+	// Bonfire: every account has discriminator #0000 with unique usernames, so discriminator changes cannot happen.
+	test.skip('non-premium username change rerolls when requested discriminator is already taken', async () => {
 		await runCaseUpdateTest(harness, async ({account, initialUser}) => {
 			const otherAccount = await createTestAccount(harness);
 			const {json: otherUser} = await fetchUserMe(harness, otherAccount.token);

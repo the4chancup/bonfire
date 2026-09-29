@@ -19,7 +19,8 @@ interface SuspiciousActivityErrorResponse {
 	};
 }
 
-describe('Email verification suspicious flags', () => {
+// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+describe.skip('Email verification suspicious flags', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
 		harness = await createAuthHarness();

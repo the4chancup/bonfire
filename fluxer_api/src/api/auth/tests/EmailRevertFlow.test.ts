@@ -122,7 +122,8 @@ function uniquePassword(): string {
 	return `Sup3r-${Date.now()}-Pass!`;
 }
 
-describe('Email revert flow', () => {
+// Bonfire: accounts have no email, so this emailed flow cannot run.
+describe.skip('Email revert flow', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
 		harness = await createAuthHarness();

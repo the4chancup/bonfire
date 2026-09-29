@@ -208,7 +208,8 @@ describe('Deferred phone verification gate', () => {
 		expect(flags & SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION).not.toBe(0);
 	});
 
-	it('promotes the requirement and refuses the join on a qualifying guild inside the window', async () => {
+	// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+	it.skip('promotes the requirement and refuses the join on a qualifying guild inside the window', async () => {
 		await getInstanceConfigRepository().setInstancePolicyConfig({
 			deferred_phone_gate_enabled: true,
 			deferred_phone_gate_member_threshold: 1,
@@ -369,7 +370,8 @@ describe('Deferred phone verification gate', () => {
 				.execute();
 		}
 
-		it('answers both escape routes for an account every ordinary route refuses', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('answers both escape routes for an account every ordinary route refuses', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_reach');
 
@@ -383,7 +385,8 @@ describe('Deferred phone verification gate', () => {
 			await executeEscape(subject);
 		});
 
-		it('records the promotion without leaking the bit into the client projection', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('records the promotion without leaking the bit into the client projection', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_bit');
 
@@ -403,7 +406,8 @@ describe('Deferred phone verification gate', () => {
 			expect(me.suspicious_activity_flags).toBeUndefined();
 		});
 
-		it('unlocks an account that is in no community at all', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('unlocks an account that is in no community at all', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_empty');
 			expect(await readGuildIds(subject.userId)).toEqual([]);
@@ -427,7 +431,8 @@ describe('Deferred phone verification gate', () => {
 			expect(flags & SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE).not.toBe(0);
 		});
 
-		it('leaves the qualifying community, unlocks the account and dispatches a single user update', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('leaves the qualifying community, unlocks the account and dispatches a single user update', async () => {
 			await configurePhoneGate();
 			const member = await createGuildWithInvite(harness);
 			const subject = await registerDeferredUser('escape_leave');
@@ -458,7 +463,8 @@ describe('Deferred phone verification gate', () => {
 			expect(flags & PHONE_GATE_PROMOTED_FROM_DEFERRAL).toBe(0);
 		});
 
-		it('applies the member threshold strictly, so a community sitting on it is kept', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('applies the member threshold strictly, so a community sitting on it is kept', async () => {
 			await configurePhoneGate({deferred_phone_gate_member_threshold: 2});
 			const onThreshold = await createGuildWithInvite(harness);
 			const aboveThreshold = await createGuildWithInvite(harness);
@@ -478,7 +484,8 @@ describe('Deferred phone verification gate', () => {
 			expect(await readGuildIds(subject.userId)).toEqual([onThreshold.guildId]);
 		});
 
-		it('leaves a discoverable community that sits far below the member threshold', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('leaves a discoverable community that sits far below the member threshold', async () => {
 			await configurePhoneGate({deferred_phone_gate_member_threshold: 50});
 			const discoverable = await createGuildWithInvite(harness);
 			const subject = await registerDeferredUser('escape_disc');
@@ -495,7 +502,8 @@ describe('Deferred phone verification gate', () => {
 			expect(await readGuildIds(subject.userId)).toEqual([]);
 		});
 
-		it('keeps a qualifying community the user owns and reports it separately', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('keeps a qualifying community the user owns and reports it separately', async () => {
 			await configurePhoneGate();
 			const member = await createGuildWithInvite(harness);
 			const subject = await registerDeferredUser('escape_owned');
@@ -527,7 +535,8 @@ describe('Deferred phone verification gate', () => {
 			expect((await readFlags(subject.userId)) & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
 		});
 
-		it('leaves what it can when the qualifying set exceeds the per-call limit, and finishes on a second call', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('leaves what it can when the qualifying set exceeds the per-call limit, and finishes on a second call', async () => {
 			await configurePhoneGate();
 			const subject = await registerDeferredUser('escape_batch');
 			for (let index = 0; index < PHONE_GATE_ESCAPE_MAX_GUILDS + 1; index++) {
@@ -571,7 +580,8 @@ describe('Deferred phone verification gate', () => {
 			expect(await readFlags(subject.userId)).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE);
 		});
 
-		it('refuses while the gate is switched off, leaving flags and memberships untouched', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('refuses while the gate is switched off, leaving flags and memberships untouched', async () => {
 			await configurePhoneGate();
 			const member = await createGuildWithInvite(harness);
 			const subject = await registerDeferredUser('escape_off');
@@ -590,7 +600,8 @@ describe('Deferred phone verification gate', () => {
 			expect(await readGuildIds(subject.userId)).toEqual([member.guildId]);
 		});
 
-		it('refuses in single-community mode and leaves the designated community alone', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('refuses in single-community mode and leaves the designated community alone', async () => {
 			await configurePhoneGate();
 			const member = await createGuildWithInvite(harness);
 			const subject = await registerDeferredUser('escape_single');
@@ -620,7 +631,8 @@ describe('Deferred phone verification gate', () => {
 			expect(await readGuildIds(subject.userId)).toEqual([member.guildId]);
 		});
 
-		it('refuses a promoted account that also carries the inbound-SMS tier', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('refuses a promoted account that also carries the inbound-SMS tier', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_inbound');
 			const promotedFlags = await readFlags(subject.userId);
@@ -634,7 +646,8 @@ describe('Deferred phone verification gate', () => {
 			await expectEscapeRefused(subject);
 		});
 
-		it('closes itself after a successful escape', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('closes itself after a successful escape', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_twice');
 			await executeEscape(subject);
@@ -646,7 +659,8 @@ describe('Deferred phone verification gate', () => {
 			expect(preview.available).toBe(false);
 		});
 
-		it('leaves a remaining email requirement in place', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('leaves a remaining email requirement in place', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_email');
 			const promotedFlags = await readFlags(subject.userId);
@@ -661,7 +675,8 @@ describe('Deferred phone verification gate', () => {
 			expect(me.required_actions ?? []).toEqual(['REQUIRE_VERIFIED_EMAIL']);
 		});
 
-		it('restores the deferral, so a qualifying join re-promotes inside the window and not outside it', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('restores the deferral, so a qualifying join re-promotes inside the window and not outside it', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_rearm');
 			await executeEscape(subject);
@@ -709,7 +724,8 @@ describe('Deferred phone verification gate', () => {
 			}
 		});
 
-		it('spends the execute budget only on execute calls', async () => {
+		// Bonfire: email-less accounts get no required actions (getRequiredActions returns [] when user.email is null), so this gate never engages.
+		it.skip('spends the execute budget only on execute calls', async () => {
 			await configurePhoneGate();
 			const subject = await createPromotedSubject('escape_limit');
 			for (let index = 0; index < 3; index++) {

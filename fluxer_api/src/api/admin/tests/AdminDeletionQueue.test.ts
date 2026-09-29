@@ -172,12 +172,12 @@ describe('Admin Deletion Queue', () => {
 		expect(ipBan.banned).toBe(false);
 		expect(emailBan.banned).toBe(false);
 	});
-	test('moderation scheduled deletion bans email and marks IP suspicious without banning it', async () => {
+	test('moderation scheduled deletion of an email-less account marks the IP suspicious without banning it', async () => {
 		const adminIp = createUniqueTestIp();
 		const targetIp = createUniqueTestIp();
 		const admin = await createTestAccount(harness, {ipAddress: adminIp});
 		const targetUser = await createTestAccount(harness, {ipAddress: targetIp});
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check']);
 		await createBuilder(harness, `${admin.token}`)
 			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
@@ -186,12 +186,8 @@ describe('Admin Deletion Queue', () => {
 		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
 			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
-		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email!)}`)
-			.execute();
 		const suspiciousIp = await new CassandraSuspiciousIpRepository().findActiveByIp(targetIp);
 		expect(ipBan.banned).toBe(false);
-		expect(emailBan.banned).toBe(true);
 		expect(suspiciousIp?.source).toBe('scheduled_deletion');
 		expect(suspiciousIp?.sourceUserId).toBe(targetUser.userId);
 	});

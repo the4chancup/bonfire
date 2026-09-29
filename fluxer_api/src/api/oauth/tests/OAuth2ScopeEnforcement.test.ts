@@ -94,7 +94,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(json.id).toBe(account.userId);
-			expect(json.email).toBe(account.email);
+			expect(json.email).toBeNull();
 		});
 		test('GET /users/@me with session token (no scope check) succeeds', async () => {
 			const account = await createTestAccount(harness);
@@ -103,7 +103,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(json.id).toBe(account.userId);
-			expect(json.email).toBe(account.email);
+			expect(json.email).toBeNull();
 		});
 		test('GET /users/@me with bot token (no scope check) succeeds', async () => {
 			const appOwner = await createTestAccount(harness);
@@ -318,7 +318,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(json.id).toBe(account.userId);
-			expect(json.email).toBe(account.email);
+			expect(json.email).toBeNull();
 		});
 		test('Token with guilds but not identify cannot access /users/@me/guilds without auth context', async () => {
 			const account = await createTestAccount(harness);
@@ -340,7 +340,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(userJson.id).toBe(account.userId);
-			expect(userJson.email).toBe(account.email);
+			expect(userJson.email).toBeNull();
 			const guildsJson = await createBuilder<Array<UserGuildResponse>>(harness, `Bearer ${oauth2Token.token}`)
 				.get('/users/@me/guilds')
 				.expect(HTTP_STATUS.OK)
@@ -375,7 +375,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(userJson.id).toBe(account.userId);
-			expect(userJson.email).toBe(account.email);
+			expect(userJson.email).toBeNull();
 			const guildsJson = await createBuilder<Array<UserGuildResponse>>(harness, account.token)
 				.get('/users/@me/guilds')
 				.expect(HTTP_STATUS.OK)
@@ -559,7 +559,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				.get('/users/@me')
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(userJson3.email).toBe(account.email);
+			expect(userJson3.email).toBeNull();
 			const guildsJson2 = await createBuilder<Array<UserGuildResponse>>(harness, `Bearer ${fullToken.token}`)
 				.get('/users/@me/guilds')
 				.expect(HTTP_STATUS.OK)

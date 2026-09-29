@@ -38,7 +38,7 @@ describe('Bearer token scope filtering on /users/@me', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(json.id).toBe(account.userId);
-		expect(json.email).toBe(account.email);
+		expect(json.email).toBeNull();
 		expect(json.password_last_changed_at).not.toBeNull();
 		expect(json.mfa_enabled).toBeDefined();
 		expect(Array.isArray(json.acls)).toBe(true);
@@ -97,7 +97,7 @@ describe('Bearer token scope filtering on /users/@me', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(json.id).toBe(account.userId);
-		expect(json.email).toBe(account.email);
+		expect(json.email).toBeNull();
 		expect(json.acls).toEqual([]);
 		expect(json.traits).toEqual([]);
 		expect(json.mfa_enabled).toBe(false);

@@ -37,7 +37,8 @@ describe('User FluxerTag rate limit', () => {
 		expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
 		expect(text).toContain(ValidationErrorCodes.USERNAME_CHANGED_TOO_MANY_TIMES);
 	});
-	test('blocks the sixth discriminator-only change within the cooldown window', async () => {
+	// Bonfire: every account has discriminator #0000 with unique usernames, so discriminator changes cannot happen.
+	test.skip('blocks the sixth discriminator-only change within the cooldown window', async () => {
 		const account = await createTestAccount(harness);
 		await grantPremium(harness, account.userId, UserPremiumTypes.SUBSCRIPTION);
 		const {json: me} = await fetchUserMe(harness, account.token);
