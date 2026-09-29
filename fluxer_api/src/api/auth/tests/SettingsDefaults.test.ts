@@ -21,8 +21,8 @@ describe('User settings defaults', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('defaults incoming calls to friends-only (adult and minor)', async () => {
-		const incomingCallFriendsOnly = 8;
+	it('defaults incoming calls to community members (adult and minor)', async () => {
+		const incomingCallGuildMembers = 2;
 		const adult = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
 		const adultSettings = await fetchSettings(harness, adult.token);
 		expect(adultSettings.response.status).toBe(200);
@@ -32,7 +32,7 @@ describe('User settings defaults', () => {
 					incoming_call_flags: number;
 				}
 			).incoming_call_flags,
-		).toBe(incomingCallFriendsOnly);
+		).toBe(incomingCallGuildMembers);
 		const minorReg = await registerUser(harness, {
 			username: createUniqueUsername(),
 			global_name: 'Minor Settings',
@@ -48,6 +48,6 @@ describe('User settings defaults', () => {
 					incoming_call_flags: number;
 				}
 			).incoming_call_flags,
-		).toBe(incomingCallFriendsOnly);
+		).toBe(incomingCallGuildMembers);
 	});
 });

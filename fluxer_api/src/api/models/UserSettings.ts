@@ -214,7 +214,7 @@ export class UserSettings {
 			inline_embed_media: true,
 			explicit_content_filter: explicitContentFilter,
 			friend_source_flags: friendSourceFlags,
-			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
+			incoming_call_flags: IncomingCallFlags.GUILD_MEMBERS,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
 			default_guilds_restricted: false,
 			bot_default_guilds_restricted: false,

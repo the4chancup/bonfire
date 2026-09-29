@@ -54,6 +54,16 @@ describe('Voice Call Eligibility', () => {
 				.execute();
 			expect(callData.ringable).toBe(true);
 		});
+		it('returns ringable true for DM between mutual guild members with default settings', async () => {
+			const {user1, user2} = await setupUsersWithMutualGuild();
+			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
+			const callData = await createBuilder<{
+				ringable: boolean;
+			}>(harness, user1.token)
+				.get(`/channels/${dmChannel.id}/call`)
+				.execute();
+			expect(callData.ringable).toBe(true);
+		});
 		it('returns ringable true for DM with mutual guild membership', async () => {
 			const {user1, user2} = await setupUsersWithMutualGuild();
 			await updateUserSettings(harness, user2.token, {
