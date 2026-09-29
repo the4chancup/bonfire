@@ -8,12 +8,12 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {DownloadSimpleIcon, EyeSlashIcon} from '@phosphor-icons/react';
@@ -39,7 +39,7 @@ export const DownloadButton = observer(() => {
 		return null;
 	}
 	const handleDownload = () => {
-		openExternalUrlWithWarning(DESKTOP_DOWNLOAD_URL);
+		void openExternalUrl(DESKTOP_DOWNLOAD_URL);
 	};
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.preventDefault();
