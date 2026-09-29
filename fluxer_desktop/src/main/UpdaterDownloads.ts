@@ -9,6 +9,7 @@ export type UpdaterDownloadOption = {
 };
 
 export const UPDATE_BASE_URL = 'https://github.com/the4chancup/bonfire/releases/latest/download';
+export const VELOPACK_FEED_URL = 'https://github.com/the4chancup/bonfire';
 export const DOWNLOAD_PAGE_URL = 'https://github.com/the4chancup/bonfire/releases';
 
 export const MANUAL_DESKTOP_FORMATS = ['setup', 'dmg', 'zip', 'appimage', 'deb', 'rpm', 'tar_gz'] as const;

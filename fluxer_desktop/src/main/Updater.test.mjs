@@ -121,6 +121,7 @@ function loadUpdater({
 	velopack,
 	applyAttempt = null,
 	portable = false,
+	now = null,
 }) {
 	const events = [];
 	const handlers = new Map();
@@ -174,6 +175,15 @@ function loadUpdater({
 	const sandbox = {
 		console,
 		Buffer,
+		...(now
+			? {
+					Date: class extends Date {
+						static now() {
+							return now.current;
+						}
+					},
+				}
+			: {}),
 		process: {
 			...process,
 			platform,
@@ -240,7 +250,7 @@ function loadUpdater({
 		applyState,
 		events,
 		state,
-		check: () => handlers.get('updater-check')({}, 'user'),
+		check: (context = 'user') => handlers.get('updater-check')({}, context),
 		install: () => handlers.get('updater-install')({}),
 		quit: () => appEvents.get('will-quit')?.(),
 	};
@@ -484,7 +494,12 @@ describe('Updater AppImage lifecycle', () => {
 
 function createVelopackStub({installedVersion, pendingRestart = null, remoteUpdate = null}) {
 	const applied = [];
+	const checks = [];
+	let feedUrl = null;
 	class UpdateManager {
+		constructor(url) {
+			feedUrl = url;
+		}
 		getCurrentVersion() {
 			return installedVersion;
 		}
@@ -492,6 +507,7 @@ function createVelopackStub({installedVersion, pendingRestart = null, remoteUpda
 			return pendingRestart;
 		}
 		checkForUpdatesAsync() {
+			checks.push(Date.now());
 			return Promise.resolve(remoteUpdate);
 		}
 		downloadUpdateAsync() {
@@ -501,18 +517,24 @@ function createVelopackStub({installedVersion, pendingRestart = null, remoteUpda
 			applied.push(update);
 		}
 	}
-	return {applied, module: {UpdateManager}};
+	return {applied, checks, module: {UpdateManager}, getFeedUrl: () => feedUrl};
 }
 
-function loadWindowsUpdater({installedVersion, pendingRestart, remoteUpdate, applyAttempt = null}) {
+function loadWindowsUpdater({installedVersion, pendingRestart, remoteUpdate, applyAttempt = null, now = null}) {
 	const velopack = createVelopackStub({installedVersion, pendingRestart, remoteUpdate});
 	const updater = loadUpdater({
 		platform: 'win32',
 		arch: 'x64',
 		velopack: velopack.module,
 		applyAttempt,
+		now,
 	});
-	return {...updater, applied: velopack.applied};
+	return {
+		...updater,
+		applied: velopack.applied,
+		checks: velopack.checks,
+		getFeedUrl: () => velopack.getFeedUrl(),
+	};
 }
 
 describe('Updater Windows apply failures', () => {
@@ -573,6 +595,45 @@ describe('Updater Windows apply failures', () => {
 });
 
 describe('Bonfire update feed', () => {
+	test('points Velopack at the repository root, not the download base', async () => {
+		const updater = loadWindowsUpdater({
+			installedVersion: CURRENT_VERSION,
+			remoteUpdate: {TargetFullRelease: {Version: PUBLISHED_VERSION, Size: 100}},
+		});
+
+		await updater.check('user');
+
+		assert.equal(updater.getFeedUrl(), 'https://github.com/the4chancup/bonfire');
+	});
+
+	test('throttles non-user Velopack checks but always honours user checks', async () => {
+		const now = {current: 1_700_000_000_000};
+		const updater = loadWindowsUpdater({
+			installedVersion: CURRENT_VERSION,
+			remoteUpdate: {TargetFullRelease: {Version: PUBLISHED_VERSION, Size: 100}},
+			now,
+		});
+
+		await updater.check('background');
+		assert.equal(updater.checks.length, 1);
+		assert.deepEqual(types(updater.events), ['checking', 'available']);
+
+		updater.events.length = 0;
+		await updater.check('focus');
+		await updater.check('background');
+		assert.equal(updater.checks.length, 1);
+		assert.deepEqual(updater.events, []);
+
+		await updater.check('user');
+		assert.equal(updater.checks.length, 2);
+
+		updater.events.length = 0;
+		now.current += 10 * 60 * 1000;
+		await updater.check('background');
+		assert.equal(updater.checks.length, 3);
+		assert.deepEqual(types(updater.events), ['checking', 'available']);
+	});
+
 	test('a portable Windows build gets the release page, not the setup exe', async () => {
 		const updater = loadUpdater({platform: 'win32', arch: 'x64', appImagePath: null, portable: true});
 

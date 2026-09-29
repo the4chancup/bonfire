@@ -34,6 +34,7 @@ import {
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
 	type UpdaterDownloadOption,
+	VELOPACK_FEED_URL,
 } from '@electron/main/UpdaterDownloads';
 import {setQuitting} from '@electron/main/Window';
 import {app, autoUpdater, type BrowserWindow, ipcMain} from 'electron';
@@ -92,6 +93,10 @@ type VelopackUpdate = UpdateInfo | VelopackAsset;
 
 let pendingVelopackUpdate: VelopackUpdate | null = null;
 let velopackCheckPromise: Promise<void> | null = null;
+// GithubSource hits the unauthenticated API rate limit quickly, so non-user
+// checks reuse the result of the most recent completed check for a while.
+let lastVelopackCheckCompletedAt: number | null = null;
+const VELOPACK_BACKGROUND_CHECK_MIN_INTERVAL_MS = 10 * 60 * 1000;
 let velopackDownloadPromise: Promise<void> | null = null;
 let velopackInstallStarted = false;
 let pendingAppImageUpdate: PendingAppImageUpdate | null = null;
@@ -152,7 +157,7 @@ function getVelopackUpdateSize(update: VelopackUpdate): number | null {
 
 function createVelopackUpdateManager() {
 	const {UpdateManager} = requireModule('velopack') as typeof import('velopack');
-	return new UpdateManager(UPDATE_BASE_URL);
+	return new UpdateManager(VELOPACK_FEED_URL);
 }
 
 type VelopackUpdateManager = ReturnType<typeof createVelopackUpdateManager>;
@@ -216,6 +221,13 @@ async function checkVelopackForUpdates(
 	if (velopackCheckPromise) {
 		return velopackCheckPromise;
 	}
+	if (
+		context !== 'user' &&
+		lastVelopackCheckCompletedAt !== null &&
+		Date.now() - lastVelopackCheckCompletedAt < VELOPACK_BACKGROUND_CHECK_MIN_INTERVAL_MS
+	) {
+		return;
+	}
 	velopackCheckPromise = (async () => {
 		try {
 			send(getMainWindow(), {type: 'checking', context});
@@ -270,6 +282,7 @@ async function checkVelopackForUpdates(
 			send(getMainWindow(), {type: 'error', context, phase: 'check', message: getErrorMessage(error)});
 		}
 	})().finally(() => {
+		lastVelopackCheckCompletedAt = Date.now();
 		velopackCheckPromise = null;
 	});
 	return velopackCheckPromise;
