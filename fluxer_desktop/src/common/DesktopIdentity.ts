@@ -2,13 +2,14 @@
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 
-export const DESKTOP_APP_NAME = BUILD_CHANNEL === 'canary' ? 'Fluxer Canary' : 'Fluxer';
-export const MACOS_BUNDLE_ID = BUILD_CHANNEL === 'canary' ? 'app.fluxer.canary' : 'app.fluxer';
-export const LINUX_DESKTOP_ENTRY_ID = BUILD_CHANNEL === 'canary' ? 'fluxer-canary' : 'fluxer';
-export const WINDOWS_SHORTCUT_AUTHOR = 'Fluxer Platform AB';
-export const WINDOWS_VELOPACK_ID = BUILD_CHANNEL === 'canary' ? 'fluxer_desktop_canary' : 'fluxer_desktop';
+export const DESKTOP_APP_NAME = BUILD_CHANNEL === 'canary' ? 'Bonfire Canary' : 'Bonfire';
+export const MACOS_BUNDLE_ID = BUILD_CHANNEL === 'canary' ? 'app.bonfire.canary' : 'app.bonfire';
+export const LINUX_DESKTOP_ENTRY_ID = BUILD_CHANNEL === 'canary' ? 'bonfire-canary' : 'bonfire';
+export const WINDOWS_SHORTCUT_AUTHOR = 'the4chancup';
+export const WINDOWS_VELOPACK_ID = BUILD_CHANNEL === 'canary' ? 'bonfire_desktop_canary' : 'bonfire_desktop';
 export const WINDOWS_LEGACY_SQUIRREL_ID = 'fluxer_app';
-export const WINDOWS_APP_USER_MODEL_ID = BUILD_CHANNEL === 'canary' ? 'Fluxer.Fluxer.Canary' : 'Fluxer.Fluxer';
+export const WINDOWS_APP_USER_MODEL_ID =
+	BUILD_CHANNEL === 'canary' ? 'the4chancup.Bonfire.Canary' : 'the4chancup.Bonfire';
 export const WINDOWS_LEGACY_APP_USER_MODEL_IDS = [`velopack.${WINDOWS_VELOPACK_ID}`];
 export const WINDOWS_TOAST_ACTIVATOR_CLSID =
-	BUILD_CHANNEL === 'canary' ? '{9CEDB5C0-3552-43B0-A279-2232E0CDF74C}' : '{48EEF21B-F3AE-431E-8CF2-386FFB2143F2}';
+	BUILD_CHANNEL === 'canary' ? '{87CF223F-5C5B-4230-8200-93095A0B0EDE}' : '{5B1AA354-AC5B-4DFD-A26D-CFD43992D825}';

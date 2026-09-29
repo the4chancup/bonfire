@@ -88,51 +88,63 @@ function topLevelFrame(url) {
 
 describe('DesktopConfig app origin', () => {
 	test('keeps loading the legacy root when no app origin is stored', () => {
-		assert.equal(loadDesktop().desktopConfig.getAppUrl(), 'https://web.fluxer.app');
-		assert.equal(loadDesktop({channel: 'canary'}).desktopConfig.getAppUrl(), 'https://web.canary.fluxer.app');
+		assert.equal(loadDesktop().desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info');
+		assert.equal(loadDesktop({channel: 'canary'}).desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info');
 	});
 
 	test('loads the app entry path for a stored migrated origin', () => {
-		const stable = loadDesktop({settings: {app_origin: 'https://fluxer.com'}});
-		const canary = loadDesktop({channel: 'canary', settings: {app_origin: 'https://canary.fluxer.com'}});
+		const stable = loadDesktop({settings: {app_origin: 'https://bonfire.implyingrigged.info'}});
+		const canary = loadDesktop({channel: 'canary', settings: {app_origin: 'https://bonfire.implyingrigged.info'}});
 
-		assert.equal(stable.desktopConfig.getAppUrl(), 'https://fluxer.com/app');
-		assert.equal(canary.desktopConfig.getAppUrl(), 'https://canary.fluxer.com/app');
+		assert.equal(stable.desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info/app');
+		assert.equal(canary.desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info/app');
 	});
 
-	test('loads the legacy root for a stored legacy origin', () => {
+	test('drops a stored Fluxer origin, which is no longer allowlisted', () => {
 		const {desktopConfig} = loadDesktop({settings: {app_origin: 'https://web.fluxer.app'}});
 
-		assert.equal(desktopConfig.getAppUrl(), 'https://web.fluxer.app');
+		assert.equal(desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info');
 	});
 
 	test('drops stored origins outside the channel allowlist', () => {
 		for (const appOrigin of [
-			'https://canary.fluxer.com',
-			'https://fluxer.com/',
+			'https://bonfire.implyingrigged.info/',
+			'https://web.fluxer.app',
 			'https://evil.example',
-			'http://fluxer.com',
+			'http://bonfire.implyingrigged.info',
 			42,
 		]) {
 			const {desktopConfig} = loadDesktop({settings: {app_origin: appOrigin}});
-			assert.equal(desktopConfig.getAppUrl(), 'https://web.fluxer.app');
+			assert.equal(desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info');
 		}
 	});
 
 	test('falls back from the migrated origin to the legacy root', () => {
-		const stable = loadDesktop({settings: {app_origin: 'https://fluxer.com'}}).desktopConfig;
-		const canary = loadDesktop({channel: 'canary', settings: {app_origin: 'https://canary.fluxer.com'}}).desktopConfig;
+		const stable = loadDesktop({settings: {app_origin: 'https://bonfire.implyingrigged.info'}}).desktopConfig;
+		const canary = loadDesktop({
+			channel: 'canary',
+			settings: {app_origin: 'https://bonfire.implyingrigged.info'},
+		}).desktopConfig;
 
-		assert.equal(stable.getAppUrlFallback('https://fluxer.com/app'), 'https://web.fluxer.app');
-		assert.equal(stable.getAppUrlFallback('https://fluxer.com/channels/@me'), 'https://web.fluxer.app');
-		assert.equal(canary.getAppUrlFallback('https://canary.fluxer.com/app'), 'https://web.canary.fluxer.app');
+		assert.equal(
+			stable.getAppUrlFallback('https://bonfire.implyingrigged.info/app'),
+			'https://bonfire.implyingrigged.info',
+		);
+		assert.equal(
+			stable.getAppUrlFallback('https://bonfire.implyingrigged.info/channels/@me'),
+			'https://bonfire.implyingrigged.info',
+		);
+		assert.equal(
+			canary.getAppUrlFallback('https://bonfire.implyingrigged.info/app'),
+			'https://bonfire.implyingrigged.info',
+		);
 		assert.equal(stable.getAppUrlFallback('https://web.fluxer.app/channels/@me'), null);
 		assert.equal(stable.getAppUrlFallback('https://canary.fluxer.com/app'), null);
 		assert.equal(stable.getAppUrlFallback('not a url'), null);
 	});
 
 	test('the runtime override still wins over a stored origin', () => {
-		const {desktopConfig} = loadDesktop({settings: {app_origin: 'https://fluxer.com'}});
+		const {desktopConfig} = loadDesktop({settings: {app_origin: 'https://bonfire.implyingrigged.info'}});
 		desktopConfig.setRuntimeAppUrlOverride('http://localhost:8088/');
 
 		assert.equal(desktopConfig.getAppUrl(), 'http://localhost:8088/');
@@ -143,18 +155,24 @@ describe('DomainMigration set app origin IPC', () => {
 	test('persists an allowlisted origin from an official top-level frame', () => {
 		const {desktopConfig, readSettings, setAppOrigin} = loadDesktop();
 
-		setAppOrigin(topLevelFrame('https://fluxer.com/migrate/complete'), 'https://fluxer.com');
+		setAppOrigin(
+			topLevelFrame('https://bonfire.implyingrigged.info/migrate/complete'),
+			'https://bonfire.implyingrigged.info',
+		);
 
-		assert.equal(readSettings().app_origin, 'https://fluxer.com');
-		assert.equal(desktopConfig.getAppUrl(), 'https://fluxer.com/app');
+		assert.equal(readSettings().app_origin, 'https://bonfire.implyingrigged.info');
+		assert.equal(desktopConfig.getAppUrl(), 'https://bonfire.implyingrigged.info/app');
 	});
 
 	test('accepts the legacy frame of the running channel', () => {
 		const {readSettings, setAppOrigin} = loadDesktop({channel: 'canary'});
 
-		setAppOrigin(topLevelFrame('https://web.canary.fluxer.app/channels/@me'), 'https://canary.fluxer.com');
+		setAppOrigin(
+			topLevelFrame('https://bonfire.implyingrigged.info/channels/@me'),
+			'https://bonfire.implyingrigged.info',
+		);
 
-		assert.equal(readSettings().app_origin, 'https://canary.fluxer.com');
+		assert.equal(readSettings().app_origin, 'https://bonfire.implyingrigged.info');
 	});
 
 	test('rejects senders that are not official top-level frames of the channel', () => {
@@ -163,20 +181,32 @@ describe('DomainMigration set app origin IPC', () => {
 			null,
 			topLevelFrame('https://evil.example/'),
 			topLevelFrame('https://canary.fluxer.com/app'),
-			{url: 'https://fluxer.com/app', detached: true, parent: null},
-			{url: 'https://fluxer.com/app', detached: false, parent: topLevelFrame('https://fluxer.com/app')},
+			{url: 'https://bonfire.implyingrigged.info/app', detached: true, parent: null},
+			{
+				url: 'https://bonfire.implyingrigged.info/app',
+				detached: false,
+				parent: topLevelFrame('https://bonfire.implyingrigged.info/app'),
+			},
 			topLevelFrame('not a url'),
 		];
 		for (const frame of rejectedFrames) {
-			assert.throws(() => setAppOrigin(frame, 'https://fluxer.com'), /official app document/);
+			assert.throws(() => setAppOrigin(frame, 'https://bonfire.implyingrigged.info'), /official app document/);
 		}
 		assert.equal(fs.existsSync(settingsPath), false);
 	});
 
 	test('rejects origins outside the channel allowlist', () => {
 		const {setAppOrigin, settingsPath} = loadDesktop();
-		for (const origin of ['https://canary.fluxer.com', 'https://fluxer.com/app', 'https://evil.example', null]) {
-			assert.throws(() => setAppOrigin(topLevelFrame('https://fluxer.com/app'), origin), /outside the allowlist/);
+		for (const origin of [
+			'https://canary.fluxer.com',
+			'https://bonfire.implyingrigged.info/app',
+			'https://evil.example',
+			null,
+		]) {
+			assert.throws(
+				() => setAppOrigin(topLevelFrame('https://bonfire.implyingrigged.info/app'), origin),
+				/outside the allowlist/,
+			);
 		}
 		assert.equal(fs.existsSync(settingsPath), false);
 	});

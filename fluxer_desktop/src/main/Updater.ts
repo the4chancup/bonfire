@@ -33,6 +33,7 @@ import {
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
+	UPDATE_FEED_ENABLED,
 	type UpdaterDownloadOption,
 } from '@electron/main/UpdaterDownloads';
 import {setQuitting} from '@electron/main/Window';
@@ -190,7 +191,7 @@ async function sendVelopackApplyFailure(
 		type: 'error',
 		context,
 		phase: 'install',
-		message: `Fluxer could not finish installing version ${attempt.version}.`,
+		message: `Bonfire could not finish installing version ${attempt.version}.`,
 	});
 	try {
 		const latest = await fetchManualLatest({forceRefresh: true});
@@ -804,7 +805,7 @@ function registerManualUpdater(
 }
 
 export function registerUpdater(getMainWindow: () => BrowserWindow | null) {
-	if (!app.isPackaged) {
+	if (!app.isPackaged || !UPDATE_FEED_ENABLED) {
 		registerManualUpdater(getMainWindow, 'unpackaged');
 		return;
 	}

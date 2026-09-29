@@ -8,14 +8,14 @@ const path = require('node:path');
 const {promisify} = require('node:util');
 const execFileAsync = promisify(execFile);
 const isLinuxBuild = process.argv.includes('--linux');
-const productName = isCanary ? 'Fluxer Canary' : 'Fluxer';
-const linuxOptDirName = isCanary ? 'fluxer-canary' : 'Fluxer';
+const productName = isCanary ? 'Bonfire Canary' : 'Bonfire';
+const linuxOptDirName = isCanary ? 'bonfire-canary' : 'Bonfire';
 const installedProductName = isLinuxBuild ? linuxOptDirName : productName;
-const artifactProductName = isCanary ? 'Fluxer-Canary' : 'Fluxer';
-const appId = isCanary ? 'app.fluxer.canary' : 'app.fluxer';
+const artifactProductName = isCanary ? 'Bonfire-Canary' : 'Bonfire';
+const appId = isCanary ? 'app.bonfire.canary' : 'app.bonfire';
 const iconDir = isCanary ? 'icons-canary' : 'icons-stable';
-const packageName = isCanary ? 'fluxer_desktop_canary' : 'fluxer_desktop';
-const linuxPackageName = isCanary ? 'fluxer-canary' : 'fluxer';
+const packageName = isCanary ? 'bonfire_desktop_canary' : 'bonfire_desktop';
+const linuxPackageName = isCanary ? 'bonfire-canary' : 'bonfire';
 const linuxDesktopActionIds = ['open-settings', 'new-dm'];
 const linuxDesktopActionList = `${linuxDesktopActionIds.join(';')};`;
 const linuxGlibcBaseline = Object.freeze({major: 2, minor: 35, patch: 0, name: 'GLIBC_2.35'});
@@ -344,7 +344,7 @@ const linuxDesktopEntry = {
 	StartupWMClass: linuxPackageName,
 	StartupNotify: 'true',
 	SingleMainWindow: 'true',
-	MimeType: 'x-scheme-handler/fluxer;',
+	MimeType: 'x-scheme-handler/bonfire;',
 	'X-GNOME-UsesNotifications': 'true',
 };
 const linuxDesktopEntryWithActions = {
@@ -1588,7 +1588,7 @@ module.exports = {
 		{
 			name: appId,
 			role: 'Viewer',
-			schemes: ['fluxer'],
+			schemes: ['bonfire'],
 		},
 	],
 	beforePack: verifyNativePackageInputs,

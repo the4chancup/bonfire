@@ -117,6 +117,7 @@ function loadUpdater({
 	arch = 'arm64',
 	velopack,
 	applyAttempt = null,
+	updateFeedEnabled = true,
 }) {
 	const events = [];
 	const handlers = new Map();
@@ -220,7 +221,10 @@ function loadUpdater({
 	sandbox.module = updaterDownloadsModule;
 	sandbox.exports = updaterDownloadsModule.exports;
 	sandbox.__filename = updaterDownloadsSource.path;
-	vm.runInContext(updaterDownloadsSource.code, context, {filename: updaterDownloadsSource.path});
+	const updaterDownloadsCode = updateFeedEnabled
+		? updaterDownloadsSource.code.replace('UPDATE_FEED_ENABLED = false', 'UPDATE_FEED_ENABLED = true')
+		: updaterDownloadsSource.code;
+	vm.runInContext(updaterDownloadsCode, context, {filename: updaterDownloadsSource.path});
 	stubs['@electron/main/UpdaterDownloads'] = updaterDownloadsModule.exports;
 
 	sandbox.module = module;
@@ -565,5 +569,17 @@ describe('Updater Windows apply failures', () => {
 
 		assert.deepEqual(updater.applied, []);
 		assert.deepEqual(updater.applyState.recorded, []);
+	});
+});
+
+describe('Bonfire update feed', () => {
+	test('a packaged build takes the unpackaged manual path while the feed is off', async () => {
+		const updater = loadUpdater({updateFeedEnabled: false, appImagePath: null});
+
+		await updater.check();
+
+		assert.deepEqual(types(updater.events), ['unsupported']);
+		assert.equal(updater.events[0].reason, 'unpackaged');
+		assert.equal(updater.events[0].downloadUrl, 'https://github.com/the4chancup/bonfire/releases');
 	});
 });

@@ -18,8 +18,8 @@ interface ChannelStorageDirectoryMap {
 }
 
 const channelStorageDirectoryMap: ChannelStorageDirectoryMap = {
-	stable: 'fluxer',
-	canary: 'fluxercanary',
+	stable: 'bonfire',
+	canary: 'bonfirecanary',
 };
 
 let portableMode = false;
