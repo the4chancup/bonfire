@@ -17,7 +17,7 @@ export interface HandlerHost {
 	navigateToGuildLikeSlot(slotIndex: number): void;
 	cycleGuildLikeSlot(direction: 1 | -1): void;
 	cycleChannelInCurrentContext(direction: 1 | -1): void;
-	cycleFilteredChannelInCurrentGuild(predicate: (channel: Channel) => boolean, direction: 1 | -1): void;
+	cycleFilteredChannel(predicate: (channel: Channel) => boolean, direction: 1 | -1): void;
 	getIncomingCallChannelId(): string | null;
 	acceptIncomingCall(channelId: string): void;
 	declineIncomingCall(channelId: string): void;

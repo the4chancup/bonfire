@@ -37,7 +37,7 @@ class GuildReadStateEntry {
 	}
 }
 
-type ContributeChannel = {
+export type ContributeChannel = {
 	id: string;
 	type: number;
 	guildId?: string | null;
@@ -73,6 +73,15 @@ function getChannelContribution(channel: ContributeChannel, channelId: string): 
 		hasUnread,
 		mentionCount,
 	});
+}
+
+export function channelCountsAsUnread(channel: ContributeChannel): boolean {
+	return getChannelContribution(channel, channel.id).unreadAllowed;
+}
+
+export function channelHasCountedMentions(channel: ContributeChannel): boolean {
+	const contribution = getChannelContribution(channel, channel.id);
+	return contribution.mentionAllowed && contribution.mentionCount > 0;
 }
 
 class GuildReadState {

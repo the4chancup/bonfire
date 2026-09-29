@@ -13,6 +13,7 @@ import {
 	isKeybindAllowedDuringVoiceCallFullscreen,
 	isKeybindBlockedByCompactVoiceCallView,
 } from '@app/features/app/keybindings/KeybindScopeUtils';
+import {findCycledChannel} from '@app/features/app/keybindings/keybind_manager/ChannelCycling';
 import {registerDefaultKeybindHandlers} from '@app/features/app/keybindings/keybind_manager/handlers/defaultHandlers';
 import {registerMessageHandlers} from '@app/features/app/keybindings/keybind_manager/handlers/messageHandlers';
 import type {
@@ -308,18 +309,15 @@ class KeybindManager {
 		this.navigateToChannel(target.guildId ?? null, target.id);
 	}
 
-	cycleFilteredChannelInCurrentGuild(predicate: (channel: Channel) => boolean, direction: 1 | -1): void {
-		const guildId = this.currentGuildId;
-		if (!guildId) return;
-		const channels = this.flattenGuildChannelsByDisplayOrder(Channels.getGuildChannels(guildId)).filter((c) =>
-			predicate(c),
-		);
-		if (!channels.length) return;
-		const current = this.currentChannelId;
-		const idx = current ? channels.findIndex((c) => c.id === current) : -1;
-		const base = idx === -1 ? (direction === 1 ? -1 : 0) : idx;
-		const target = channels[(base + direction + channels.length) % channels.length];
-		this.navigateToChannel(guildId, target.id);
+	cycleFilteredChannel(predicate: (channel: Channel) => boolean, direction: 1 | -1): void {
+		const channels: Array<Channel> = [];
+		for (const guild of this.getOrderedGuilds()) {
+			channels.push(...this.flattenGuildChannelsByDisplayOrder(Channels.getGuildChannels(guild.id)));
+		}
+		const target = findCycledChannel(channels, this.currentChannelId, predicate, direction);
+		if (target) {
+			this.navigateToChannel(target.guildId ?? null, target.id);
+		}
 	}
 
 	getIncomingCallChannelId(): string | null {

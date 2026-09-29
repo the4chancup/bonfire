@@ -16,6 +16,7 @@ import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMMod
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {AddGuildModal} from '@app/features/guild/components/modals/AddGuildModal';
+import {channelCountsAsUnread, channelHasCountedMentions} from '@app/features/guild/state/GuildReadState';
 import {CANCEL_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox from '@app/features/inbox/state/Inbox';
@@ -442,19 +443,19 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('nav_unread_next', ({type}) => {
 		if (type !== 'press') return;
-		host.cycleFilteredChannelInCurrentGuild((c) => ReadStates.hasUnread(c.id), 1);
+		host.cycleFilteredChannel((c) => channelCountsAsUnread(c), 1);
 	});
 	host.register('nav_unread_prev', ({type}) => {
 		if (type !== 'press') return;
-		host.cycleFilteredChannelInCurrentGuild((c) => ReadStates.hasUnread(c.id), -1);
+		host.cycleFilteredChannel((c) => channelCountsAsUnread(c), -1);
 	});
 	host.register('nav_mention_next', ({type}) => {
 		if (type !== 'press') return;
-		host.cycleFilteredChannelInCurrentGuild((c) => ReadStates.getMentionCount(c.id) > 0, 1);
+		host.cycleFilteredChannel((c) => channelHasCountedMentions(c), 1);
 	});
 	host.register('nav_mention_prev', ({type}) => {
 		if (type !== 'press') return;
-		host.cycleFilteredChannelInCurrentGuild((c) => ReadStates.getMentionCount(c.id) > 0, -1);
+		host.cycleFilteredChannel((c) => channelHasCountedMentions(c), -1);
 	});
 	host.register('voice_start_dm_call', ({type, shiftKey}) => {
 		if (type !== 'press') return;
