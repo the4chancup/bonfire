@@ -5,6 +5,12 @@ on:
     tags:
       - 'desktop-v*'
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a GitHub release for this build (dry-run if false)
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -13,21 +19,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build Windows x64
-    runs-on: windows-2025
-    timeout-minutes: 120
+  meta:
+    name: Resolve version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     permissions:
       contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
       - name: Resolve version
         id: version
         shell: bash
@@ -46,8 +47,22 @@ jobs:
           TAG="desktop-v$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+  build-windows:
+    name: Build Windows x64
+    needs: meta
+    runs-on: windows-2025
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      TAG: ${{ needs.meta.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -172,41 +187,156 @@ jobs:
           for f in velopack-out/*-full.nupkg velopack-out/releases.win.json velopack-out/RELEASES velopack-out/assets.win.json; do
             if [ -f "$f" ]; then cp "$f" release/; fi
           done
-          cd release
-          sha256sum -- * > SHA256SUMS.txt
-          ls -la
+          ls -la release
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: bonfire-desktop
+          name: bonfire-desktop-windows
+          path: release/
+          retention-days: 7
+
+  build-linux:
+    name: Build Linux x64
+    needs: meta
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      TAG: ${{ needs.meta.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+
+      - name: Set up pnpm
+        shell: bash
+        run: npm install -g pnpm@11.27.0
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: '1.98.1'
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install system dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
+          --step install_linux_deps
+
+      - name: Resolve pnpm store path
+        shell: bash
+        run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: linux-x64-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            linux-x64-pnpm-store-
+
+      - name: Install dependencies
+        shell: bash
+        run: pnpm install --frozen-lockfile --filter 'fluxer_desktop...'
+
+      - name: Set package version
+        working-directory: fluxer_desktop
+        shell: bash
+        run: pnpm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Build Electron main process
+        working-directory: fluxer_desktop
+        shell: bash
+        env:
+          NODE_ENV: production
+          FLUXER_DESKTOP_PRODUCTION: 'true'
+          ELECTRON_ARCH: x64
+        run: pnpm build
+
+      - name: Build Linux packages
+        working-directory: fluxer_desktop
+        shell: bash
+        env:
+          USE_SYSTEM_FPM: 'true'
+          ELECTRON_ARCH: x64
+        run: |
+          set -euo pipefail
+          pnpm exec electron-builder --config electron-builder.config.cjs --linux AppImage deb --x64
+          mkdir -p ../release
+          cp dist-electron/*.AppImage dist-electron/*.deb ../release/
+          test -f "$(ls ../release/*.AppImage | head -1)"
+          test -f "$(ls ../release/*.deb | head -1)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bonfire-desktop-linux
           path: release/
           retention-days: 7
 
   release:
     name: Publish GitHub release
-    needs: build
+    needs:
+      - meta
+      - build-windows
+      - build-linux
+    if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: write
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      TAG: ${{ needs.meta.outputs.tag }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
       - name: Download build artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: bonfire-desktop
+          pattern: bonfire-desktop-*
           path: release/
+          merge-multiple: true
+
+      - name: Write update manifest
+        shell: bash
+        run: >-
+          python3 .github/scripts/bonfire_desktop_latest.py
+          --version "$VERSION" --tag "$TAG" --repo "$GITHUB_REPOSITORY" --dir release
+
+      - name: Generate SHA256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release
+          sha256sum -- * > SHA256SUMS.txt
+          ls -la
 
       - name: Write release notes
         shell: bash
         run: |
           cat > notes.md <<'EOF'
-          Bonfire Desktop $VERSION for Windows 10/11 x64.
+          Bonfire Desktop $VERSION for Windows 10/11 x64 and Linux x64.
 
-          - The setup installs for the current user (no admin required) and adds Start menu and desktop shortcuts.
-          - The portable ZIP runs from any folder and keeps its data next to Bonfire.exe.
+          - The Windows setup installs for the current user (no admin required), adds Start menu and desktop shortcuts, and updates itself.
+          - The AppImage updates itself in place; `chmod +x` then run it.
+          - The .deb installs with `sudo apt install ./<file>.deb`.
+          - The Windows portable ZIP and the .deb do not self-update; they show an update notice with a download link.
           - Builds are unsigned: SmartScreen shows "Windows protected your PC"; choose "More info" then "Run anyway".
-          - No automatic updates yet — new versions appear on this page.
           - Verify downloads against SHA256SUMS.txt.
           EOF
 
@@ -214,11 +344,9 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.build.outputs.version }}
-          TAG: ${{ needs.build.outputs.tag }}
         run: |
           set -euo pipefail
-          sed -i "s/\$VERSION/$VERSION/" notes.md
+          sed -i "s/\$VERSION/$VERSION/g" notes.md
           ARGS=(--repo "$GITHUB_REPOSITORY" --title "Bonfire Desktop $VERSION" --notes-file notes.md)
           if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
             ARGS+=(--verify-tag)

@@ -56,14 +56,17 @@ let failAppImageRequests = 0;
 
 before(async () => {
 	server = createServer((request, response) => {
-		if (request.url === '/latest') {
+		if (request.url === '/latest.json') {
 			response.writeHead(200, {'content-type': 'application/json'});
 			response.end(
 				JSON.stringify({
 					version: PUBLISHED_VERSION,
 					pub_date: '2026-09-04T13:51:13Z',
 					files: {
-						appimage: {url: `${baseUrl}/appimage`, sha256: NEW_SHA256},
+						appimage: {
+							url: `${baseUrl}/Bonfire-${PUBLISHED_VERSION}-linux-x86_64.AppImage`,
+							sha256: NEW_SHA256,
+						},
 						deb: {url: `${baseUrl}/deb`, sha256: 'deadbeef'},
 						setup: {url: `${baseUrl}/setup`, sha256: 'cafebabe'},
 					},
@@ -71,7 +74,7 @@ before(async () => {
 			);
 			return;
 		}
-		if (request.url === `/${PUBLISHED_VERSION}/appimage`) {
+		if (request.url === `/Bonfire-${PUBLISHED_VERSION}-linux-x86_64.AppImage`) {
 			appImageRequests += 1;
 			if (failAppImageRequests > 0) {
 				failAppImageRequests -= 1;
@@ -117,7 +120,7 @@ function loadUpdater({
 	arch = 'arm64',
 	velopack,
 	applyAttempt = null,
-	updateFeedEnabled = true,
+	portable = false,
 }) {
 	const events = [];
 	const handlers = new Map();
@@ -138,7 +141,7 @@ function loadUpdater({
 			},
 		},
 		'@electron/common/BuildChannel': {BUILD_CHANNEL: 'canary'},
-		'@electron/common/UserDataPath': {isPortableMode: () => false},
+		'@electron/common/UserDataPath': {isPortableMode: () => portable},
 		'@electron/main/DesktopTray': {destroyDesktopTray() {}},
 		'@electron/main/LinuxSandbox': {isFlatpakRuntime: () => false},
 		'@electron/main/Troubleshooting': {
@@ -185,7 +188,10 @@ function loadUpdater({
 		clearTimeout,
 		setImmediate,
 		fetch: (input, init) => {
-			const url = String(input).replace(/https:\/\/pkgs\.fluxer\.com\/desktop\/canary\/[^/]+\/[^/]+/, baseUrl);
+			const url = String(input).replace(
+				/^https:\/\/github\.com\/the4chancup\/bonfire\/releases\/latest\/download\//,
+				`${baseUrl}/`,
+			);
 			return fetch(url, init);
 		},
 		require: (specifier) => {
@@ -221,10 +227,7 @@ function loadUpdater({
 	sandbox.module = updaterDownloadsModule;
 	sandbox.exports = updaterDownloadsModule.exports;
 	sandbox.__filename = updaterDownloadsSource.path;
-	const updaterDownloadsCode = updateFeedEnabled
-		? updaterDownloadsSource.code.replace('UPDATE_FEED_ENABLED = false', 'UPDATE_FEED_ENABLED = true')
-		: updaterDownloadsSource.code;
-	vm.runInContext(updaterDownloadsCode, context, {filename: updaterDownloadsSource.path});
+	vm.runInContext(updaterDownloadsSource.code, context, {filename: updaterDownloadsSource.path});
 	stubs['@electron/main/UpdaterDownloads'] = updaterDownloadsModule.exports;
 
 	sandbox.module = module;
@@ -329,10 +332,7 @@ describe('Updater AppImage lifecycle', () => {
 			assert.equal(available.version, PUBLISHED_VERSION);
 			assert.ok(available.downloadOptions.length > 0);
 			assert.equal(available.downloadOptions[0].format, 'appimage');
-			assert.equal(
-				available.downloadOptions[0].suggestedName,
-				`Fluxer-Canary-${PUBLISHED_VERSION}-linux-arm64.AppImage`,
-			);
+			assert.equal(available.downloadOptions[0].suggestedName, `Bonfire-${PUBLISHED_VERSION}-linux-x86_64.AppImage`);
 		} finally {
 			chmodSync(install.applications, 0o755);
 		}
@@ -573,13 +573,17 @@ describe('Updater Windows apply failures', () => {
 });
 
 describe('Bonfire update feed', () => {
-	test('a packaged build takes the unpackaged manual path while the feed is off', async () => {
-		const updater = loadUpdater({updateFeedEnabled: false, appImagePath: null});
+	test('a portable Windows build gets the release page, not the setup exe', async () => {
+		const updater = loadUpdater({platform: 'win32', arch: 'x64', appImagePath: null, portable: true});
 
 		await updater.check();
 
-		assert.deepEqual(types(updater.events), ['unsupported']);
-		assert.equal(updater.events[0].reason, 'unpackaged');
-		assert.equal(updater.events[0].downloadUrl, 'https://github.com/the4chancup/bonfire/releases');
+		assert.deepEqual(types(updater.events), ['checking', 'available']);
+		const available = updater.events.at(-1);
+		assert.equal(available.downloadStarted, false);
+		assert.equal(
+			available.downloadUrl,
+			`https://github.com/the4chancup/bonfire/releases/tag/desktop-v${PUBLISHED_VERSION}`,
+		);
 	});
 });

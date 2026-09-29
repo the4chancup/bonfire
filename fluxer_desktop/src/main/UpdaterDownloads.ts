@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-
 export type UpdaterDownloadOption = {
 	format: ManualDesktopFormat;
 	label: string;
@@ -10,16 +8,7 @@ export type UpdaterDownloadOption = {
 	sha256?: string | null;
 };
 
-type DesktopDownloadArch = 'x64' | 'arm64';
-
-function getDesktopDownloadArch(arch: NodeJS.Architecture): DesktopDownloadArch {
-	return arch === 'arm64' ? 'arm64' : 'x64';
-}
-
-const DESKTOP_DOWNLOAD_ARCH = getDesktopDownloadArch(process.arch);
-const PKGS_BASE_URL = 'https://pkgs.fluxer.com';
-export const UPDATE_FEED_ENABLED = false;
-export const UPDATE_BASE_URL = `${PKGS_BASE_URL}/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}`;
+export const UPDATE_BASE_URL = 'https://github.com/the4chancup/bonfire/releases/latest/download';
 export const DOWNLOAD_PAGE_URL = 'https://github.com/the4chancup/bonfire/releases';
 
 export const MANUAL_DESKTOP_FORMATS = ['setup', 'dmg', 'zip', 'appimage', 'deb', 'rpm', 'tar_gz'] as const;
@@ -54,36 +43,17 @@ const LINUX_MANUAL_FORMAT_LABELS: Record<LinuxManualDesktopFormat, string> = {
 	tar_gz: 'tar.gz archive',
 };
 
-const LINUX_MANUAL_FORMAT_EXTENSIONS: Record<LinuxManualDesktopFormat, string> = {
-	appimage: '.AppImage',
-	deb: '.deb',
-	rpm: '.rpm',
-	tar_gz: '.tar.gz',
-};
-
-const LINUX_MANUAL_ARCH_TOKENS: Record<LinuxManualDesktopFormat, Record<DesktopDownloadArch, string>> = {
-	appimage: {x64: 'x86_64', arm64: 'arm64'},
-	deb: {x64: 'amd64', arm64: 'arm64'},
-	rpm: {x64: 'x86_64', arm64: 'aarch64'},
-	tar_gz: {x64: 'x64', arm64: 'arm64'},
-};
-
 function isLinuxManualDesktopFormat(format: ManualDesktopFormat): format is LinuxManualDesktopFormat {
 	return format === 'appimage' || format === 'deb' || format === 'rpm' || format === 'tar_gz';
 }
 
-export function buildManualVersionDownloadUrl(version: string, format: ManualDesktopFormat): string {
-	return `${UPDATE_BASE_URL}/${version}/${format}`;
+export function buildReleasePageUrl(version: string): string {
+	return `https://github.com/the4chancup/bonfire/releases/tag/desktop-v${version}`;
 }
 
-function getArtifactProductName(): string {
-	return BUILD_CHANNEL === 'canary' ? 'Fluxer-Canary' : 'Fluxer';
-}
-
-function getManualUpdateSuggestedName(format: LinuxManualDesktopFormat, version: string): string {
-	const archToken = LINUX_MANUAL_ARCH_TOKENS[format][DESKTOP_DOWNLOAD_ARCH];
-	const extension = LINUX_MANUAL_FORMAT_EXTENSIONS[format];
-	return `${getArtifactProductName()}-${version}-linux-${archToken}${extension}`;
+function suggestedNameFromUrl(url: string): string | undefined {
+	const name = url.split(/[?#]/)[0].split('/').at(-1);
+	return name || undefined;
 }
 
 export function getManualDownloadOptions(info: ManualLatestInfo): Array<UpdaterDownloadOption> {
@@ -92,14 +62,15 @@ export function getManualDownloadOptions(info: ManualLatestInfo): Array<UpdaterD
 	}
 	return getManualDownloadFormatPreference()
 		.filter(isLinuxManualDesktopFormat)
+		.filter((format) => info.files[format] != null)
 		.map((format) => {
-			const file = info.files[format];
+			const file = info.files[format]!;
 			return {
 				format,
 				label: LINUX_MANUAL_FORMAT_LABELS[format],
-				url: buildManualVersionDownloadUrl(info.version, format),
-				suggestedName: getManualUpdateSuggestedName(format, info.version),
-				sha256: file?.sha256 ?? null,
+				url: file.url,
+				suggestedName: suggestedNameFromUrl(file.url),
+				sha256: file.sha256 ?? null,
 			};
 		});
 }

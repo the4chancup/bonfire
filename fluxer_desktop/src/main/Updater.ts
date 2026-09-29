@@ -24,7 +24,7 @@ import {
 	type VelopackApplyAttempt,
 } from '@electron/main/UpdaterApplyState';
 import {
-	buildManualVersionDownloadUrl,
+	buildReleasePageUrl,
 	DOWNLOAD_PAGE_URL,
 	getManualDownloadOptions,
 	getManualDownloadUrl,
@@ -33,7 +33,6 @@ import {
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
-	UPDATE_FEED_ENABLED,
 	type UpdaterDownloadOption,
 } from '@electron/main/UpdaterDownloads';
 import {setQuitting} from '@electron/main/Window';
@@ -206,7 +205,7 @@ async function sendVelopackApplyFailure(
 		version: attempt.version,
 		downloadSize: null,
 		downloadStarted: false,
-		downloadUrl: buildManualVersionDownloadUrl(attempt.version, 'setup'),
+		downloadUrl: buildReleasePageUrl(attempt.version),
 	});
 }
 
@@ -541,7 +540,7 @@ async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promis
 	if (!options.forceRefresh && manualLatestCache && now - manualLatestCache.at < MANUAL_CACHE_TTL_MS) {
 		return manualLatestCache.info;
 	}
-	const response = await fetch(`${UPDATE_BASE_URL}/latest`, {
+	const response = await fetch(`${UPDATE_BASE_URL}/latest.json`, {
 		cache: 'no-store',
 		headers: {
 			Accept: 'application/json',
@@ -577,7 +576,7 @@ function sendManualUpdateAvailable(
 		version: latest.version,
 		downloadSize: null,
 		downloadStarted: false,
-		downloadUrl: getManualDownloadUrl(latest),
+		downloadUrl: isPortableMode() ? buildReleasePageUrl(latest.version) : getManualDownloadUrl(latest),
 		...(downloadOptions.length > 0 ? {downloadOptions} : {}),
 	});
 }
@@ -606,7 +605,7 @@ async function downloadAppImageUpdate(
 	expectedSha256: string,
 ): Promise<void> {
 	const version = latest.version;
-	const url = buildManualVersionDownloadUrl(version, 'appimage');
+	const url = latest.files.appimage!.url;
 	let lastError: unknown;
 	for (let attempt = 1; attempt <= UPDATE_DOWNLOAD_MAX_ATTEMPTS; attempt += 1) {
 		let lastSampleAt = Date.now();
@@ -805,7 +804,7 @@ function registerManualUpdater(
 }
 
 export function registerUpdater(getMainWindow: () => BrowserWindow | null) {
-	if (!app.isPackaged || !UPDATE_FEED_ENABLED) {
+	if (!app.isPackaged) {
 		registerManualUpdater(getMainWindow, 'unpackaged');
 		return;
 	}

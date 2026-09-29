@@ -32,12 +32,6 @@ const legacyLinuxStablePackageNames = {
 	'.deb': legacyLinuxStableDebPackageName,
 	'.rpm': legacyLinuxStableRpmPackageName,
 };
-const legacyLinuxStableDebFpmArgs = isCanary
-	? []
-	: ['--replaces', legacyLinuxStableDebPackageName, '--conflicts', legacyLinuxStableDebPackageName];
-const legacyLinuxStableRpmFpmArgs = isCanary
-	? []
-	: ['--replaces', legacyLinuxStableRpmPackageName, '--conflicts', legacyLinuxStableRpmPackageName];
 const legacyLinuxCanaryOptDir = '/opt/Fluxer Canary';
 const legacyLinuxOptDirSweepScript = path.resolve(__dirname, 'packaging/linux/rpm-post-transaction.sh');
 const legacyLinuxOptDirRpmFpmArgs = isCanary ? ['--rpm-posttrans', legacyLinuxOptDirSweepScript] : [];
@@ -1424,7 +1418,7 @@ async function readLinuxPackageReplacementNames(artifactPath) {
 	};
 }
 
-async function verifyLinuxPackagesDeclareTheLegacyStableReplacement(buildResult) {
+async function verifyLinuxPackagesDoNotReplaceTheLegacyStablePackages(buildResult) {
 	const packageArtifacts = (buildResult.artifactPaths ?? []).filter((artifactPath) =>
 		['.deb', '.rpm'].includes(path.extname(artifactPath)),
 	);
@@ -1436,24 +1430,18 @@ async function verifyLinuxPackagesDeclareTheLegacyStableReplacement(buildResult)
 			...(replaces.includes(legacyName) ? ['replaces'] : []),
 			...(conflicts.includes(legacyName) ? ['conflicts'] : []),
 		];
-		if (isCanary && declared.length > 0) {
+		if (declared.length > 0) {
 			violations.push({
 				artifactPath,
-				detail: `canary declares ${declared.join(' and ')} on ${legacyName}, which belongs to stable only`,
-			});
-		} else if (!isCanary && declared.length !== 2) {
-			violations.push({
-				artifactPath,
-				detail: `stable declares ${declared.join(' and ') || 'neither'} on ${legacyName}, expected both`,
+				detail: `declares ${declared.join(' and ')} on ${legacyName}; Bonfire must coexist with a legacy install, not replace it`,
 			});
 		}
 	}
 	if (violations.length === 0) return;
 
 	const lines = [
-		'Stable Linux package artifact(s) must declare both the replaces and the conflicts relation on the legacy package.',
-		'Without both, dpkg aborts every legacy install on the file-overwrite check and dnf models the new package as a',
-		'second install that coexists with the old one. Canary never shipped under the legacy names, so it declares neither.',
+		'Linux package artifact(s) must not declare replaces or conflicts on the legacy Fluxer package names.',
+		'Bonfire installs side by side with a stock Fluxer install; a replaces/conflicts relation would uninstall it.',
 	];
 	for (const {artifactPath, detail} of violations) {
 		lines.push(`  - ${path.basename(artifactPath)}: ${detail}`);
@@ -1465,7 +1453,7 @@ async function verifyLinuxArtifactContracts(buildResult) {
 	await verifyRpmArtifactsDoNotOwnBuildIds(buildResult);
 	await verifyRpmArtifactsSurviveASamePathUpgrade(buildResult);
 	await verifyRpmArtifactsSweepTheRenamedInstallDirectory(buildResult);
-	await verifyLinuxPackagesDeclareTheLegacyStableReplacement(buildResult);
+	await verifyLinuxPackagesDoNotReplaceTheLegacyStablePackages(buildResult);
 	await verifyLinuxPackagesContainAppArmorProfile(buildResult);
 	await verifyAppImageArtifactsGlibcCompatibility(buildResult);
 	await verifyAppImageArtifactsDoNotNeedFuse2(buildResult);
@@ -1495,6 +1483,7 @@ module.exports = {
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
+		homepage: 'https://github.com/the4chancup/bonfire',
 		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxPackageName}.desktop`} : {}),
 	},
@@ -1685,7 +1674,8 @@ module.exports = {
 			entry: linuxDesktopEntryWithActions,
 			desktopActions: linuxDesktopActions,
 		},
-		fpm: legacyLinuxStableDebFpmArgs,
+		maintainer: 'the4chancup <https://github.com/the4chancup/bonfire>',
+		vendor: 'the4chancup',
 		depends: [
 			'libgtk-3-0t64 | libgtk-3-0',
 			'libnotify4',
@@ -1708,7 +1698,7 @@ module.exports = {
 			desktopActions: linuxDesktopActions,
 		},
 		afterRemove: 'packaging/linux/rpm-after-remove.tpl',
-		fpm: [...rpmBuildIdLinkFpmArgs, ...legacyLinuxStableRpmFpmArgs, ...legacyLinuxOptDirRpmFpmArgs],
+		fpm: [...rpmBuildIdLinkFpmArgs, ...legacyLinuxOptDirRpmFpmArgs],
 		depends: [
 			'gtk3',
 			'libnotify',
