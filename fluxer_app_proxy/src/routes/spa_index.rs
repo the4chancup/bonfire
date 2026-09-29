@@ -5,7 +5,9 @@ use crate::bootstrap::{
 };
 use crate::config::{AppProxyConfig, HttpEndpoint};
 use crate::csp::{RuntimeCspSources, generate_nonce};
-use crate::discovery_cache::{DiscoveryResponse, discovery_endpoint};
+use crate::discovery_cache::{
+    DiscoveryResponse, branding_string, discovery_endpoint, is_self_hosted, sized_url,
+};
 use crate::geoip::build_geoip_response;
 use crate::state::{
     AppProxyBudgets, AppState, MAX_RENDERED_SPA_INDEX_BYTES, MAX_SPA_INDEX_BYTES,
@@ -173,7 +175,7 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
         Err(response) => return response,
     };
     let raw_html = if is_self_hosted(&discovery) {
-        strip_link_preview_metadata(&raw_html)
+        apply_self_hosted_branding(&strip_link_preview_metadata(&raw_html), &discovery)
     } else {
         raw_html
     };
@@ -267,18 +269,98 @@ fn render_spa_document(
     Ok(document)
 }
 
-fn is_self_hosted(discovery: &DiscoveryResponse) -> bool {
-    discovery
-        .data
-        .get("features")
-        .and_then(|features| features.get("self_hosted"))
-        .and_then(serde_json::Value::as_bool)
-        .unwrap_or(false)
-}
-
 fn strip_link_preview_metadata(html: &str) -> String {
     let html = remove_elements(html, "<title", "</title>");
     remove_elements(&html, r#"<meta name="description""#, ">")
+}
+
+/// Point the app shell's icon, title and theme tags at the instance's own branding. Each field is
+/// applied only when discovery publishes a non-empty value; anything missing stays as built.
+fn apply_self_hosted_branding(html: &str, discovery: &DiscoveryResponse) -> String {
+    let mut html = html.to_owned();
+
+    let icon = branding_string(discovery, "favicon_url")
+        .or_else(|| branding_string(discovery, "icon_url"));
+    if let Some(icon) = icon {
+        html = replace_elements(
+            &html,
+            r#"<link rel="icon""#,
+            &format!(
+                r#"<link rel="icon" href="{}">"#,
+                escape_html_attribute(icon)
+            ),
+        );
+    }
+    if let Some(icon) = branding_string(discovery, "icon_url") {
+        html = replace_elements(
+            &html,
+            r#"<link rel="apple-touch-icon""#,
+            &format!(
+                r#"<link rel="apple-touch-icon" href="{}">"#,
+                escape_html_attribute(&sized_url(icon, 256))
+            ),
+        );
+    }
+    if let Some(product_name) = branding_string(discovery, "product_name") {
+        html = replace_elements(
+            &html,
+            r#"<meta name="apple-mobile-web-app-title""#,
+            &format!(
+                r#"<meta name="apple-mobile-web-app-title" content="{}">"#,
+                escape_html_attribute(product_name)
+            ),
+        );
+    }
+    if let Some(theme_color) = branding_string(discovery, "theme_color") {
+        for name in [
+            "theme-color",
+            "msapplication-navbutton-color",
+            "msapplication-TileColor",
+        ] {
+            html = replace_elements(
+                &html,
+                &format!(r#"<meta name="{name}""#),
+                &format!(
+                    r#"<meta name="{name}" content="{}">"#,
+                    escape_html_attribute(theme_color)
+                ),
+            );
+        }
+    }
+
+    html
+}
+
+fn replace_elements(html: &str, start: &str, replacement: &str) -> String {
+    let mut rest = html;
+    let mut output = String::with_capacity(html.len());
+
+    while let Some(index) = rest.find(start) {
+        let Some(length) = rest[index..].find('>') else {
+            break;
+        };
+        output.push_str(&rest[..index]);
+        output.push_str(replacement);
+        rest = &rest[index + length + '>'.len_utf8()..];
+    }
+
+    output.push_str(rest);
+    output
+}
+
+fn escape_html_attribute(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for c in value.chars() {
+        match c {
+            '&' => escaped.push_str("&amp;"),
+            '"' => escaped.push_str("&quot;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '\'' => escaped.push_str("&#39;"),
+            _ => escaped.push(c),
+        }
+    }
+    escaped
 }
 
 fn remove_elements(html: &str, start: &str, end: &str) -> String {
@@ -808,6 +890,150 @@ mod tests {
         assert!(!stripped.contains("twitter:"));
         assert!(stripped.contains(r#"<meta name="viewport""#));
         assert!(stripped.contains("<!--{{FLUXER_BOOTSTRAP}}-->"));
+    }
+
+    fn discovery(data: &str) -> DiscoveryResponse {
+        serde_json::from_str(data).expect("test discovery must be valid JSON")
+    }
+
+    const SELF_HOSTED_BRANDING: &str = r##"{"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"Bonfire","theme_color":"#129648","icon_url":"https://media.example.test/icons/app.png","favicon_url":"https://media.example.test/icons/clover.png"}}}"##;
+
+    fn expected_branded_shell(
+        favicon_href: &str,
+        touch_icon_href: Option<&str>,
+        title_content: &str,
+        theme_color: &str,
+    ) -> String {
+        let stripped = strip_link_preview_metadata(SHIPPED_APP_SHELL);
+        let expected = stripped.replace(
+            r#"<link rel="icon" type="image/png" sizes="32x32" href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png">"#,
+            &format!(r#"<link rel="icon" href="{favicon_href}">"#),
+        );
+        let expected = match touch_icon_href {
+            Some(href) => expected.replace(
+                r#"<link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png">"#,
+                &format!(r#"<link rel="apple-touch-icon" href="{href}">"#),
+            ),
+            None => expected,
+        };
+        let mut expected = expected.replace(
+            r#"<meta name="apple-mobile-web-app-title" content="Fluxer">"#,
+            &format!(r#"<meta name="apple-mobile-web-app-title" content="{title_content}">"#),
+        );
+        for name in [
+            "theme-color",
+            "msapplication-navbutton-color",
+            "msapplication-TileColor",
+        ] {
+            expected = expected.replace(
+                &format!(r##"<meta name="{name}" content="#4641D9">"##),
+                &format!(r#"<meta name="{name}" content="{theme_color}">"#),
+            );
+        }
+        expected
+    }
+
+    #[test]
+    fn a_self_hosted_shell_follows_the_instance_branding() {
+        let rewritten = apply_self_hosted_branding(
+            &strip_link_preview_metadata(SHIPPED_APP_SHELL),
+            &discovery(SELF_HOSTED_BRANDING),
+        );
+
+        assert_eq!(rewritten.matches(r#"rel="icon""#).count(), 1);
+        assert_eq!(
+            rewritten,
+            expected_branded_shell(
+                "https://media.example.test/icons/clover.png",
+                Some("https://media.example.test/icons/app.png?size=256"),
+                "Bonfire",
+                "#129648",
+            )
+        );
+    }
+
+    #[test]
+    fn the_icon_tag_falls_back_to_the_app_icon() {
+        let rewritten = apply_self_hosted_branding(
+            &strip_link_preview_metadata(SHIPPED_APP_SHELL),
+            &discovery(
+                r#"{"features":{"self_hosted":true},"app_public":{"branding":{"icon_url":"https://media.example.test/icons/app.png?v=2"}}}"#,
+            ),
+        );
+
+        assert!(
+            rewritten.contains(
+                r#"<link rel="icon" href="https://media.example.test/icons/app.png?v=2">"#
+            )
+        );
+        assert!(rewritten.contains(
+            r#"<link rel="apple-touch-icon" href="https://media.example.test/icons/app.png?v=2&amp;size=256">"#
+        ));
+    }
+
+    #[test]
+    fn without_any_branding_image_the_icon_tags_stay_untouched() {
+        let stripped = strip_link_preview_metadata(SHIPPED_APP_SHELL);
+        let rewritten = apply_self_hosted_branding(
+            &stripped,
+            &discovery(
+                r#"{"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"Bonfire"}}}"#,
+            ),
+        );
+
+        assert!(rewritten.contains(
+            r#"<link rel="icon" type="image/png" sizes="32x32" href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png">"#
+        ));
+        assert!(rewritten.contains(
+            r#"<link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png">"#
+        ));
+        assert!(
+            rewritten.contains(r#"<meta name="apple-mobile-web-app-title" content="Bonfire">"#)
+        );
+    }
+
+    #[test]
+    fn branding_values_are_escaped_for_html_attributes() {
+        let rewritten = apply_self_hosted_branding(
+            &strip_link_preview_metadata(SHIPPED_APP_SHELL),
+            &discovery(
+                r#"{"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"A&B \"x\" <y>"}}}"#,
+            ),
+        );
+
+        assert!(rewritten.contains(
+            r#"<meta name="apple-mobile-web-app-title" content="A&amp;B &quot;x&quot; &lt;y&gt;">"#
+        ));
+        assert!(!rewritten.contains("A&B \"x\""));
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_serves_branded_head_metadata() {
+        const DISCOVERY_BODY_SELF_HOSTED_BRANDED: &str = r##"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"},"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"Bonfire","theme_color":"#129648","icon_url":"https://media.example.test/icons/app.png","favicon_url":"https://media.example.test/icons/clover.png"}}}"##;
+        let state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHIPPED_APP_SHELL),
+            DISCOVERY_BODY_SELF_HOSTED_BRANDED,
+            None,
+            None,
+        )
+        .await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+
+        assert_eq!(served.matches(r#"rel="icon""#).count(), 1);
+        assert!(
+            served.contains(
+                r#"<link rel="icon" href="https://media.example.test/icons/clover.png">"#
+            )
+        );
+        assert!(served.contains(
+            r#"<link rel="apple-touch-icon" href="https://media.example.test/icons/app.png?size=256">"#
+        ));
+        assert!(served.contains(r#"<meta name="apple-mobile-web-app-title" content="Bonfire">"#));
+        assert!(served.contains(r##"<meta name="theme-color" content="#129648">"##));
     }
 
     #[tokio::test]

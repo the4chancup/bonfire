@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::config::HttpEndpoint;
-use crate::discovery_cache::discovery_endpoint;
+use crate::discovery_cache::{
+    DiscoveryResponse, branding_string, discovery_endpoint, is_self_hosted, sized_url,
+};
 use crate::state::{AppState, MAX_STATIC_TEXT_FILE_BYTES, read_bounded_file};
 use axum::{
     extract::State,
@@ -25,6 +27,7 @@ pub async fn version_json(State(state): State<AppState>) -> Response {
 }
 
 pub async fn manifest_json(State(state): State<AppState>) -> Response {
+    let discovery = state.discovery_cache.get().await;
     let static_cdn_endpoint = runtime_static_cdn_endpoint(&state).await;
     serve_static_text_file_with_substitutions(
         &state,
@@ -32,6 +35,7 @@ pub async fn manifest_json(State(state): State<AppState>) -> Response {
         "application/manifest+json",
         static_cdn_endpoint.as_ref(),
         Some(&state.config.manifest_scope_extensions),
+        |text| apply_instance_branding(text, discovery.as_ref()),
     )
     .await
 }
@@ -51,6 +55,52 @@ fn with_scope_extensions(text: String, origins: &[String]) -> String {
         "scope_extensions".to_owned(),
         serde_json::Value::Array(scope_extensions),
     );
+    serde_json::to_string_pretty(&manifest).unwrap_or(text)
+}
+
+/// Rewrite the built manifest to the instance's own branding. Only applies to self-hosted
+/// instances; each field is taken only when the discovery document publishes a non-empty value.
+fn apply_instance_branding(text: String, discovery: Option<&DiscoveryResponse>) -> String {
+    let Some(discovery) = discovery.filter(|d| is_self_hosted(d)) else {
+        return text;
+    };
+    let product_name = branding_string(discovery, "product_name");
+    let theme_color = branding_string(discovery, "theme_color");
+    let icon_url = branding_string(discovery, "icon_url");
+    if product_name.is_none() && theme_color.is_none() && icon_url.is_none() {
+        return text;
+    }
+    let Ok(serde_json::Value::Object(mut manifest)) = serde_json::from_str(&text) else {
+        return text;
+    };
+    if let Some(product_name) = product_name {
+        manifest.insert("name".to_owned(), product_name.into());
+        manifest.insert("short_name".to_owned(), product_name.into());
+        if let Some(description) = manifest.get("description").and_then(|v| v.as_str()) {
+            let description = description.replace("Fluxer", product_name);
+            manifest.insert("description".to_owned(), description.into());
+        }
+    }
+    if let Some(theme_color) = theme_color {
+        manifest.insert("theme_color".to_owned(), theme_color.into());
+    }
+    if let Some(icon_url) = icon_url {
+        manifest.insert(
+            "icons".to_owned(),
+            serde_json::json!([
+                {
+                    "src": sized_url(icon_url, 512),
+                    "sizes": "512x512",
+                    "purpose": "any"
+                },
+                {
+                    "src": sized_url(icon_url, 256),
+                    "sizes": "256x256",
+                    "purpose": "any"
+                }
+            ]),
+        );
+    }
     serde_json::to_string_pretty(&manifest).unwrap_or(text)
 }
 
@@ -111,6 +161,7 @@ async fn serve_static_text_file_with_cdn(
         content_type,
         static_cdn_endpoint,
         None,
+        |text| text,
     )
     .await
 }
@@ -121,6 +172,7 @@ async fn serve_static_text_file_with_substitutions(
     content_type: &str,
     static_cdn_endpoint: Option<&HttpEndpoint>,
     scope_extensions: Option<&[String]>,
+    transform: impl FnOnce(String) -> String,
 ) -> Response {
     let static_dir = state.config.static_dir.as_str();
     let file_path = Path::new(static_dir).join(filename);
@@ -152,7 +204,7 @@ async fn serve_static_text_file_with_substitutions(
 
     let replacement = static_cdn_endpoint.map_or("", HttpEndpoint::as_str);
     let body: axum::body::Body = match std::str::from_utf8(&content) {
-        Ok(text) => substitute_placeholders(text, replacement, scope_extensions)
+        Ok(text) => transform(substitute_placeholders(text, replacement, scope_extensions))
             .into_bytes()
             .into(),
         Err(_) => content.into(),
@@ -259,6 +311,114 @@ mod tests {
     }
   ]
 }"#;
+
+    const BUILT_MANIFEST_FULL: &str = r##"{
+  "name": "Fluxer",
+  "short_name": "Fluxer",
+  "description": "Fluxer is a free and open source instant messaging and VoIP platform.",
+  "id": "/",
+  "start_url": "/app",
+  "scope": "/",
+  "scope_extensions": [],
+  "theme_color": "#4641D9",
+  "icons": [
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-192x192.png",
+      "sizes": "192x192"
+    }
+  ]
+}"##;
+
+    fn discovery(data: &str) -> crate::discovery_cache::DiscoveryResponse {
+        serde_json::from_str(data).expect("test discovery must be valid JSON")
+    }
+
+    fn branded_manifest(discovery_data: &str, built: &str) -> String {
+        let discovery = discovery(discovery_data);
+        let text = substitute_placeholders(built, "https://fluxerstatic.com", Some(&[]));
+        apply_instance_branding(text, Some(&discovery))
+    }
+
+    const SELF_HOSTED_BRANDED: &str = r##"{"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"Bonfire","theme_color":"#129648","icon_url":"https://media.example.test/icons/app.png","favicon_url":"https://media.example.test/icons/clover.png"}}}"##;
+
+    #[test]
+    fn a_self_hosted_manifest_takes_the_instance_branding() {
+        let text = branded_manifest(SELF_HOSTED_BRANDED, BUILT_MANIFEST_FULL);
+        let manifest: serde_json::Value =
+            serde_json::from_str(&text).expect("branded manifest must stay valid JSON");
+
+        assert_eq!(manifest["name"], "Bonfire");
+        assert_eq!(manifest["short_name"], "Bonfire");
+        assert_eq!(
+            manifest["description"],
+            "Bonfire is a free and open source instant messaging and VoIP platform."
+        );
+        assert_eq!(manifest["theme_color"], "#129648");
+        assert_eq!(
+            manifest["icons"],
+            serde_json::json!([
+                {
+                    "src": "https://media.example.test/icons/app.png?size=512",
+                    "sizes": "512x512",
+                    "purpose": "any"
+                },
+                {
+                    "src": "https://media.example.test/icons/app.png?size=256",
+                    "sizes": "256x256",
+                    "purpose": "any"
+                }
+            ])
+        );
+        assert_eq!(manifest["id"], "/");
+        assert_eq!(manifest["start_url"], "/app");
+        assert_eq!(manifest["scope"], "/");
+        assert_eq!(manifest["scope_extensions"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn the_manifest_icon_url_keeps_an_existing_query() {
+        let text = branded_manifest(
+            r#"{"features":{"self_hosted":true},"app_public":{"branding":{"icon_url":"https://media.example.test/icons/app.png?v=2"}}}"#,
+            BUILT_MANIFEST_FULL,
+        );
+        let manifest: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(
+            manifest["icons"][0]["src"],
+            "https://media.example.test/icons/app.png?v=2&size=512"
+        );
+        assert_eq!(
+            manifest["icons"][1]["src"],
+            "https://media.example.test/icons/app.png?v=2&size=256"
+        );
+    }
+
+    #[test]
+    fn a_self_hosted_manifest_without_branding_stays_as_built() {
+        for discovery_data in [
+            r#"{"features":{"self_hosted":true}}"#,
+            r#"{"features":{"self_hosted":true},"app_public":{"branding":{"product_name":"  ","theme_color":"","icon_url":""}}}"#,
+        ] {
+            let substituted =
+                substitute_placeholders(BUILT_MANIFEST_FULL, "https://fluxerstatic.com", Some(&[]));
+            assert_eq!(
+                branded_manifest(discovery_data, BUILT_MANIFEST_FULL),
+                substituted
+            );
+        }
+    }
+
+    #[test]
+    fn the_official_instance_manifest_stays_as_built() {
+        let substituted =
+            substitute_placeholders(BUILT_MANIFEST_FULL, "https://fluxerstatic.com", Some(&[]));
+        assert_eq!(
+            branded_manifest(
+                r#"{"features":{"self_hosted":false},"app_public":{"branding":{"product_name":"Bonfire"}}}"#,
+                BUILT_MANIFEST_FULL
+            ),
+            substituted
+        );
+    }
 
     fn substituted_manifest(origins: &[&str]) -> serde_json::Value {
         let origins: Vec<String> = origins.iter().map(|origin| (*origin).to_owned()).collect();

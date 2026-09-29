@@ -35,6 +35,41 @@ pub fn discovery_endpoint(
     }
 }
 
+pub(crate) fn is_self_hosted(discovery: &DiscoveryResponse) -> bool {
+    discovery
+        .data
+        .get("features")
+        .and_then(|features| features.get("self_hosted"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+}
+
+/// A trimmed, non-empty string from `app_public.branding`, if the instance publishes one.
+pub(crate) fn branding_string<'a>(discovery: &'a DiscoveryResponse, key: &str) -> Option<&'a str> {
+    discovery
+        .data
+        .get("app_public")?
+        .get("branding")?
+        .get(key)?
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+}
+
+/// Append a `size` query parameter, preserving any query the URL already carries.
+pub(crate) fn sized_url(raw: &str, size: u32) -> String {
+    match reqwest::Url::parse(raw) {
+        Ok(mut url) => {
+            url.query_pairs_mut().append_pair("size", &size.to_string());
+            url.into()
+        }
+        Err(_) => format!(
+            "{raw}{}size={size}",
+            if raw.contains('?') { '&' } else { '?' }
+        ),
+    }
+}
+
 pub struct DiscoveryCache {
     cached: RwLock<Option<DiscoveryResponse>>,
     cold_start_attempt: Mutex<Option<Instant>>,
