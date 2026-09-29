@@ -221,7 +221,7 @@ export async function register(
 	const username = usernameCandidate!;
 	const grantBootstrapAdmin =
 		shouldAttemptBootstrapAdminGrant(config, {
-			rawEmail,
+			hasPassword: data.password != null,
 			pendingApproval: registrationAccess.pendingApproval,
 			setupConfigured: appPublicConfig.setup.configured,
 		}) && !(await instanceConfigRepository.isAdminBootstrapped());
@@ -484,7 +484,7 @@ export async function register(
 function shouldAttemptBootstrapAdminGrant(
 	config: APIConfig,
 	params: {
-		rawEmail: string | null;
+		hasPassword: boolean;
 		pendingApproval: boolean;
 		setupConfigured: boolean;
 	},
@@ -493,7 +493,7 @@ function shouldAttemptBootstrapAdminGrant(
 	const setupBootstrapOpen = !params.setupConfigured;
 	return (
 		(config.instance.selfHosted || localDevInstance || setupBootstrapOpen) &&
-		params.rawEmail !== null &&
+		params.hasPassword &&
 		!params.pendingApproval
 	);
 }

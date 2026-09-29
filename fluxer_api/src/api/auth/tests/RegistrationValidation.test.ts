@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	createAuthHarness,
-	createTestAccount,
-	createUniqueUsername,
-} from '@app/api/auth/tests/AuthTestUtils';
+import {createAuthHarness, createTestAccount, createUniqueUsername} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -94,13 +90,12 @@ describe('Registration validation', () => {
 		expect(usernameError?.code).toBe('USERNAME_LENGTH_INVALID');
 		expect(usernameError?.message).toBe('Username must be between 1 and 32 characters.');
 	});
-	it('rejects duplicate email', async () => {
+	it('rejects duplicate username', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post('/auth/register')
 			.body({
-				email: account.email,
-				username: createUniqueUsername(),
+				username: account.username.toUpperCase(),
 				global_name: 'Test User',
 				password: 'a-strong-password',
 				date_of_birth: '2000-01-01',
@@ -189,10 +184,8 @@ describe('Registration validation', () => {
 			.execute();
 		expect(me.global_name).toBe(globalName);
 	});
-	it('derives username from global name when username is not provided', async () => {
-		const reg = await createBuilderWithoutAuth<{
-			token: string;
-		}>(harness)
+	it('rejects registration when username is not provided', async () => {
+		const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)
 			.post('/auth/register')
 			.body({
 				global_name: 'Magic Tester',
@@ -200,12 +193,9 @@ describe('Registration validation', () => {
 				date_of_birth: '2000-01-01',
 				consent: true,
 			})
+			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
-		const me = await createBuilder<{
-			username: string;
-		}>(harness, reg.token)
-			.get('/users/@me')
-			.execute();
-		expect(me.username).toBe('Magic_Tester');
+		const usernameError = json.errors?.find((e) => e.path === 'username');
+		expect(usernameError?.code).toBe('USERNAME_LENGTH_INVALID');
 	});
 });

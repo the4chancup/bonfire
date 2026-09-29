@@ -6,7 +6,6 @@ import {
 	fetchMe,
 	type LoginSuccessResponse,
 	registerUser,
-	titleCaseEmail,
 	type UserMeResponse,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
@@ -110,6 +109,14 @@ describe('Auth registration', () => {
 			await expect(getInstanceConfigRepository().isAdminBootstrapped()).resolves.toBe(true);
 		});
 	});
+	it('does not grant bootstrap admin ACL when setup is configured and not bootstrapped', async () => {
+		await withBootstrapAdminConfig({selfHosted: false, testModeEnabled: true}, async () => {
+			await getInstanceConfigRepository().setAppPublicConfig({setup: {configured: true}});
+			const account = await registerUser(harness, bootstrapRegistrationBody('configurednoadmin'));
+			await expectUserACLs(account.user_id, []);
+			await expect(getInstanceConfigRepository().isAdminBootstrapped()).resolves.toBe(false);
+		});
+	});
 	it('allows setup-open sessions to fetch instance config when bootstrap marker is stale', async () => {
 		await withBootstrapAdminConfig({selfHosted: false, testModeEnabled: true}, async () => {
 			const instanceConfigRepository = getInstanceConfigRepository();
@@ -149,15 +156,17 @@ describe('Auth registration', () => {
 		const me = (await fetchMe(harness, reg.token)).json as UserMeResponse;
 		expect(me.global_name).toBe(globalName);
 	});
-	it('derives username from display name when username is omitted', async () => {
-		const reg = await registerUser(harness, {
-			password: 'a-strong-password',
-			global_name: 'Magic Tester',
-			date_of_birth: '2000-01-01',
-			consent: true,
-		});
-		const me = (await fetchMe(harness, reg.token)).json as UserMeResponse;
-		expect(me.username).toBe('Magic_Tester');
+	it('rejects registration without a username', async () => {
+		await createBuilderWithoutAuth<{errors: Array<{path: string}>}>(harness)
+			.post('/auth/register')
+			.body({
+				password: 'a-strong-password',
+				global_name: 'Magic Tester',
+				date_of_birth: '2000-01-01',
+				consent: true,
+			})
+			.expect(400)
+			.execute();
 	});
 	it('rejects invalid registration payloads', async () => {
 		await createBuilderWithoutAuth(harness)
@@ -183,9 +192,9 @@ describe('Auth registration', () => {
 			})
 			.expect(400)
 			.execute();
+		const takenUsername = createUniqueUsername('firstuser');
 		await registerUser(harness, {
-			email: 'integration-duplicate-email@example.com',
-			username: createUniqueUsername('firstuser'),
+			username: takenUsername,
 			global_name: 'Test User',
 			password: 'a-strong-password',
 			date_of_birth: '2000-01-01',
@@ -195,13 +204,12 @@ describe('Auth registration', () => {
 			code: string;
 			errors: Array<{
 				path: string;
-				message: string;
+				code: string;
 			}>;
 		}>(harness)
 			.post('/auth/register')
 			.body({
-				email: 'integration-duplicate-email@example.com',
-				username: createUniqueUsername('seconduser'),
+				username: takenUsername.toUpperCase(),
 				global_name: 'Test User',
 				password: 'a-strong-password',
 				date_of_birth: '2000-01-01',
@@ -210,23 +218,12 @@ describe('Auth registration', () => {
 			.expect(400)
 			.execute();
 		expect(duplicateJson.code).toBe('INVALID_FORM_BODY');
-		const emailError = duplicateJson.errors.find((e) => e.path === 'email');
-		expect(emailError?.message).toBe('Email is already in use.');
+		const usernameError = duplicateJson.errors.find((e) => e.path === 'username');
+		expect(usernameError?.code).toBe('TAG_ALREADY_TAKEN');
 		const missingFieldsCases: Array<{
 			name: string;
 			body: Record<string, unknown>;
 		}> = [
-			{
-				name: 'missing email',
-				body: {
-					email: '',
-					username: 'itest',
-					global_name: 'Test User',
-					password: 'a-strong-password',
-					date_of_birth: '2000-01-01',
-					consent: true,
-				},
-			},
 			{
 				name: 'missing username',
 				body: {
@@ -298,22 +295,21 @@ describe('Auth registration', () => {
 			torExitListCache.clearForTesting();
 		}
 	});
-	it('treats email as case-insensitive across auth flows', async () => {
-		const baseEmail = 'Integration-Test-Case-Email@Example.COM';
+	it('treats username as case-insensitive across auth flows', async () => {
+		const baseUsername = `IntegrationCaseUser${Date.now().toString(36)}`;
 		const password = 'a-strong-password';
 		await registerUser(harness, {
-			email: baseEmail,
-			username: createUniqueUsername('caseuser'),
+			username: baseUsername,
 			global_name: 'Test User',
 			password,
 			date_of_birth: '2000-01-01',
 			consent: true,
 		});
-		const loginEmails = [baseEmail.toLowerCase(), baseEmail.toUpperCase(), titleCaseEmail(baseEmail)];
-		for (const email of loginEmails) {
+		const loginUsernames = [baseUsername.toLowerCase(), baseUsername.toUpperCase(), baseUsername];
+		for (const username of loginUsernames) {
 			const login = await createBuilderWithoutAuth<LoginSuccessResponse>(harness)
 				.post('/auth/login')
-				.body({email, password})
+				.body({email: username, password})
 				.execute();
 			expect(login.token.length).toBeGreaterThan(0);
 		}
@@ -321,13 +317,12 @@ describe('Auth registration', () => {
 			code: string;
 			errors: Array<{
 				path: string;
-				message: string;
+				code: string;
 			}>;
 		}>(harness)
 			.post('/auth/register')
 			.body({
-				email: baseEmail.toUpperCase(),
-				username: createUniqueUsername('caseuser2'),
+				username: baseUsername.toUpperCase(),
 				global_name: 'Test User',
 				password: 'another-strong-password',
 				date_of_birth: '2000-01-01',
@@ -336,22 +331,16 @@ describe('Auth registration', () => {
 			.expect(400)
 			.execute();
 		expect(duplicateJson.code).toBe('INVALID_FORM_BODY');
-		const emailError = duplicateJson.errors.find((e) => e.path === 'email');
-		expect(emailError?.message).toBe('Email is already in use.');
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/forgot')
-			.body({email: baseEmail.toUpperCase()})
-			.expect(204)
-			.execute();
-		const caseEmailUser = await registerUser(harness, {
-			email: 'integration-case-store-email@example.com',
-			username: createUniqueUsername('caseemailstored'),
-			global_name: 'Stored Email',
+		const usernameError = duplicateJson.errors.find((e) => e.path === 'username');
+		expect(usernameError?.code).toBe('TAG_ALREADY_TAKEN');
+		const caseUser = await registerUser(harness, {
+			username: createUniqueUsername('caseuserstored'),
+			global_name: 'Stored Username',
 			password: 'a-strong-password',
 			date_of_birth: '2000-01-01',
 			consent: true,
 		});
-		const me = (await fetchMe(harness, caseEmailUser.token)).json as UserMeResponse;
-		expect(me.email).toBe('integration-case-store-email@example.com');
+		const me = (await fetchMe(harness, caseUser.token)).json as UserMeResponse;
+		expect(me.username.startsWith('caseuserstored')).toBe(true);
 	});
 });
