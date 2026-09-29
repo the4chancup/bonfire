@@ -1,0 +1,228 @@
+name: bonfire desktop
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: bonfire-desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Windows x64
+    runs-on: windows-2025
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#desktop-v}"
+          else
+            NOW="$(date -u +'%Y.%-m%d %H%M%S')"
+            VERSION="${NOW% *}.$((10#${NOW#* }))"
+          fi
+          if ! echo "$VERSION" | grep -qE '^[0-9]{4}\.[1-9][0-9]{2,3}\.(0|[1-9][0-9]{0,5})$'; then
+            echo "Invalid version: $VERSION" >&2
+            exit 1
+          fi
+          TAG="desktop-v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+
+      - name: Set up pnpm
+        shell: bash
+        run: npm install -g pnpm@11.27.0
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: '1.98.1'
+          targets: x86_64-pc-windows-msvc
+
+      - name: Set up MSVC env
+        uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9
+        with:
+          arch: amd64
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Prepare Windows environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global core.longpaths true
+          mkdir -p /c/t /c/ebcache
+          GIT_LINK='/c/Program Files/Git/usr/bin/link.exe'
+          if [ -f "$GIT_LINK" ]; then
+            mv "$GIT_LINK" '/c/Program Files/Git/usr/bin/link.exe.disabled'
+          fi
+
+      - name: Resolve pnpm store path
+        shell: bash
+        run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: windows-x64-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            windows-x64-pnpm-store-
+
+      - name: Install dependencies
+        shell: bash
+        run: pnpm install --frozen-lockfile --filter 'fluxer_desktop...'
+
+      - name: Set package version
+        working-directory: fluxer_desktop
+        shell: bash
+        run: pnpm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Build Electron main process
+        working-directory: fluxer_desktop
+        shell: bash
+        env:
+          NODE_ENV: production
+          FLUXER_DESKTOP_PRODUCTION: 'true'
+          ELECTRON_ARCH: x64
+        run: pnpm build
+
+      - name: Build Windows app directory
+        working-directory: fluxer_desktop
+        shell: bash
+        env:
+          ELECTRON_ARCH: x64
+          TEMP: C:\t
+          TMP: C:\t
+          ELECTRON_BUILDER_CACHE: C:\ebcache
+        run: |
+          set -euo pipefail
+          pnpm exec electron-builder --config electron-builder.config.cjs --win --x64
+          test -f dist-electron/win-unpacked/Bonfire.exe
+
+      - name: Create portable ZIP
+        working-directory: fluxer_desktop
+        shell: pwsh
+        run: |
+          New-Item -ItemType File -Path "dist-electron/win-unpacked/.portable" -Force | Out-Null
+          Push-Location "dist-electron/win-unpacked"
+          7z a -tzip "../../Bonfire-$env:VERSION-portable-win-x64.zip" "*" | Out-Null
+          $rc = $LASTEXITCODE
+          Pop-Location
+          Remove-Item "dist-electron/win-unpacked/.portable"
+          if ($rc -ne 0) { throw "7z failed" }
+
+      - name: Install Velopack CLI
+        shell: bash
+        run: dotnet tool install --tool-path .velopack vpk --version 1.2.0
+
+      - name: Package with Velopack
+        working-directory: fluxer_desktop
+        shell: bash
+        run: >-
+          "$GITHUB_WORKSPACE/.velopack/vpk" --yes pack
+          --packId bonfire_desktop --packVersion "$VERSION"
+          --packDir dist-electron/win-unpacked --mainExe Bonfire.exe
+          --packTitle Bonfire --packAuthors the4chancup
+          --shortcuts Desktop,StartMenu --runtime win-x64
+          --icon build_resources/icons-stable/icon.ico
+          --outputDir ../velopack-out --delta None
+
+      - name: Assemble release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          SETUP=$(ls velopack-out/*Setup.exe | head -1)
+          cp "$SETUP" "release/Bonfire-$VERSION-win-x64-setup.exe"
+          cp "fluxer_desktop/Bonfire-$VERSION-portable-win-x64.zip" release/
+          for f in velopack-out/*-full.nupkg velopack-out/releases.win.json velopack-out/RELEASES velopack-out/assets.win.json; do
+            if [ -f "$f" ]; then cp "$f" release/; fi
+          done
+          cd release
+          sha256sum -- * > SHA256SUMS.txt
+          ls -la
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bonfire-desktop
+          path: release/
+          retention-days: 7
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: bonfire-desktop
+          path: release/
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > notes.md <<'EOF'
+          Bonfire Desktop $VERSION for Windows 10/11 x64.
+
+          - The setup installs for the current user (no admin required) and adds Start menu and desktop shortcuts.
+          - The portable ZIP runs from any folder and keeps its data next to Bonfire.exe.
+          - Builds are unsigned: SmartScreen shows "Windows protected your PC"; choose "More info" then "Run anyway".
+          - No automatic updates yet — new versions appear on this page.
+          - Verify downloads against SHA256SUMS.txt.
+          EOF
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+          sed -i "s/\$VERSION/$VERSION/" notes.md
+          ARGS=(--repo "$GITHUB_REPOSITORY" --title "Bonfire Desktop $VERSION" --notes-file notes.md)
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            ARGS+=(--verify-tag)
+          else
+            ARGS+=(--target "$GITHUB_SHA")
+          fi
+          gh release create "$TAG" release/* "${ARGS[@]}"
