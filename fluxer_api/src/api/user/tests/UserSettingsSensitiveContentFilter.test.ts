@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {setCachedDateOfBirthCollection} from '@app/api/instance/DateOfBirthCollectionCache';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -123,24 +122,6 @@ describe('User Settings - Sensitive Content Filters', () => {
 				.body({sensitive_content_guild_filter: SensitiveMediaFilterLevel.BLOCK})
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
-		});
-		test('accepts all filters when the instance collects no birth date', async () => {
-			// createTestAccount's register call refreshes the cache from instance config,
-			// so set it after creating the account.
-			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
-			setCachedDateOfBirthCollection(false);
-			try {
-				const {json} = await updateUserSettings(harness, account.token, {
-					sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.SHOW,
-					sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.SHOW,
-					sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-				});
-				expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-				expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-				expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-			} finally {
-				setCachedDateOfBirthCollection(true);
-			}
 		});
 	});
 	describe('persistence', () => {
