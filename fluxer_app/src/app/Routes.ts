@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {helpCenterUrl, marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 
 export const Routes = {
 	HOME: '/',
@@ -39,10 +39,10 @@ export const Routes = {
 	guidelines: () => marketingUrl('guidelines'),
 	careers: () => marketingUrl('careers'),
 	partners: () => marketingUrl('partners'),
-	bugs: () => marketingUrl('help/report-bug'),
+	bugs: () => helpCenterUrl('help/report-bug'),
 	plutonium: () => marketingUrl('plutonium'),
-	help: () => marketingUrl('help'),
-	helpArticle: (slug: string) => marketingUrl(`help/${slug}`),
+	help: () => helpCenterUrl('help'),
+	helpArticle: (slug: string) => helpCenterUrl(`help/${slug}`),
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,
 	favoritesChannel: (channelId: string) => `/channels/@favorites/${channelId}`,
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,

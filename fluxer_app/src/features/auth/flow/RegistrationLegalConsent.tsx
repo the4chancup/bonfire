@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {getPrivacyUrl, getTermsUrl} from '@app/features/app/utils/LegalUrls';
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import type {LegalConsentRequirement} from '@app/features/auth/flow/SubmitTooltip';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
@@ -15,8 +14,8 @@ export interface RegistrationLegalConsentConfig {
 }
 
 export function getRegistrationLegalConsentConfig(showLegalConsent = true): RegistrationLegalConsentConfig {
-	const termsUrl = RuntimeConfig.termsUrl ?? (!RuntimeConfig.isSelfHosted() ? Routes.terms() : null);
-	const privacyUrl = RuntimeConfig.privacyUrl ?? (!RuntimeConfig.isSelfHosted() ? Routes.privacy() : null);
+	const termsUrl = getTermsUrl();
+	const privacyUrl = getPrivacyUrl();
 	if (!showLegalConsent || (!termsUrl && !privacyUrl)) {
 		return {
 			termsUrl,

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
@@ -11,6 +10,7 @@ import {
 	THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import {getCommunityGuidelinesUrl} from '@app/features/app/utils/LegalUrls';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
@@ -157,6 +157,7 @@ const IMAGE_COULDN_T_BE_USED_DESCRIPTOR = msg({
 	comment: 'Error modal title shown when a template-import community icon upload cannot be accepted or processed.',
 });
 export const TemplateImportForm = observer(() => {
+	const communityGuidelinesUrl = getCommunityGuidelinesUrl();
 	const {i18n} = useLingui();
 	const theOtherPlatform = THE_OTHER_PLATFORM;
 	const [step, setStep] = useState<TemplateImportStep>('url');
@@ -650,19 +651,21 @@ export const TemplateImportForm = observer(() => {
 						required={true}
 						type="text"
 					/>
-					<p className={styles.guidelines} data-flx="guild.add-guild-modal.template-import-form.guidelines">
-						<Trans>
-							By creating a community, you agree to follow and uphold the{' '}
-							<ExternalLink
-								href={Routes.guidelines()}
-								className={styles.guidelinesLink}
-								data-flx="guild.add-guild-modal.template-import-form.guidelines-link"
-							>
-								{PRODUCT_NAME} community guidelines
-							</ExternalLink>
-							.
-						</Trans>
-					</p>
+					{communityGuidelinesUrl ? (
+						<p className={styles.guidelines} data-flx="guild.add-guild-modal.template-import-form.guidelines">
+							<Trans>
+								By creating a community, you agree to follow and uphold the{' '}
+								<ExternalLink
+									href={communityGuidelinesUrl}
+									className={styles.guidelinesLink}
+									data-flx="guild.add-guild-modal.template-import-form.guidelines-link"
+								>
+									{PRODUCT_NAME} community guidelines
+								</ExternalLink>
+								.
+							</Trans>
+						</p>
+					) : null}
 				</div>
 			</Form>
 		</div>

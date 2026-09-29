@@ -2,7 +2,6 @@
 
 import {msg} from '@lingui/core/macro';
 import '@app/features/app/components/dialogs/components/SettingsSearchHighlight.css';
-import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {AllSettingsRenderer} from '@app/features/app/components/dialogs/components/AllSettingsRenderer';
 import {ClientInfo} from '@app/features/app/components/dialogs/components/ClientInfo';
@@ -26,6 +25,7 @@ import {
 } from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
 import {hasWhatsNewEntries} from '@app/features/app/components/whats_new/WhatsNewEntries';
 import {openWhatsNewModal} from '@app/features/app/components/whats_new/WhatsNewModal';
+import {getPrivacyUrl, getTermsUrl} from '@app/features/app/utils/LegalUrls';
 import {
 	BACK_TO_SETTINGS_DESCRIPTOR,
 	SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR,
@@ -293,6 +293,8 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 		onPendingSectionConsumed,
 	}) => {
 		const {i18n} = useLingui();
+		const termsUrl = getTermsUrl();
+		const privacyUrl = getPrivacyUrl();
 		const currentUser = Users.currentUser;
 		const currentUserCreatedAt = currentUser?.createdAt ?? null;
 		const prefersReducedMotion = Accessibility.useReducedMotion;
@@ -424,26 +426,32 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 						<SettingsModalSidebarFooter data-flx="app.desktop-settings-view.settings-modal-sidebar-footer">
 							<div className={styles.footerContent} data-flx="app.desktop-settings-view.footer-content">
 								<ClientInfo data-flx="app.desktop-settings-view.client-info" />
-								<div className={styles.legalLinks} data-flx="app.desktop-settings-view.legal-links">
-									<a
-										href={Routes.terms()}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.legalLink}
-										data-flx="app.desktop-settings-view.legal-link"
-									>
-										<Trans>Terms of service</Trans>
-									</a>
-									<a
-										href={Routes.privacy()}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.legalLink}
-										data-flx="app.desktop-settings-view.legal-link--2"
-									>
-										<Trans>Privacy policy</Trans>
-									</a>
-								</div>
+								{termsUrl || privacyUrl ? (
+									<div className={styles.legalLinks} data-flx="app.desktop-settings-view.legal-links">
+										{termsUrl ? (
+											<a
+												href={termsUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={styles.legalLink}
+												data-flx="app.desktop-settings-view.legal-link"
+											>
+												<Trans>Terms of service</Trans>
+											</a>
+										) : null}
+										{privacyUrl ? (
+											<a
+												href={privacyUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={styles.legalLink}
+												data-flx="app.desktop-settings-view.legal-link--2"
+											>
+												<Trans>Privacy policy</Trans>
+											</a>
+										) : null}
+									</div>
+								) : null}
 								<div className={styles.footerSpacer} data-flx="app.desktop-settings-view.footer-spacer" />
 							</div>
 						</SettingsModalSidebarFooter>

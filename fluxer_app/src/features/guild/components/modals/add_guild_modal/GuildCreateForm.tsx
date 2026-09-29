@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
@@ -10,6 +9,7 @@ import {
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import {getCommunityGuidelinesUrl} from '@app/features/app/utils/LegalUrls';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
@@ -67,6 +67,7 @@ const CHANGE_ICON_DESCRIPTOR = msg({
 });
 
 export const GuildCreateForm = observer(() => {
+	const communityGuidelinesUrl = getCommunityGuidelinesUrl();
 	const {i18n} = useLingui();
 	const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
 	const form = useForm<GuildCreateFormInputs>({defaultValues: {name: ''}});
@@ -334,19 +335,21 @@ export const GuildCreateForm = observer(() => {
 						required={true}
 						type="text"
 					/>
-					<p className={styles.guidelines} data-flx="guild.add-guild-modal.guild-create-form.guidelines">
-						<Trans>
-							By creating a community, you agree to follow and uphold the{' '}
-							<ExternalLink
-								href={Routes.guidelines()}
-								className={styles.guidelinesLink}
-								data-flx="guild.add-guild-modal.guild-create-form.guidelines-link"
-							>
-								{PRODUCT_NAME} community guidelines
-							</ExternalLink>
-							.
-						</Trans>
-					</p>
+					{communityGuidelinesUrl ? (
+						<p className={styles.guidelines} data-flx="guild.add-guild-modal.guild-create-form.guidelines">
+							<Trans>
+								By creating a community, you agree to follow and uphold the{' '}
+								<ExternalLink
+									href={communityGuidelinesUrl}
+									className={styles.guidelinesLink}
+									data-flx="guild.add-guild-modal.guild-create-form.guidelines-link"
+								>
+									{PRODUCT_NAME} community guidelines
+								</ExternalLink>
+								.
+							</Trans>
+						</p>
+					) : null}
 				</div>
 			</Form>
 		</div>

@@ -51,6 +51,15 @@ export function marketingUrl(path: string): string {
 	return `${RuntimeConfig.marketingEndpoint}/${path}`;
 }
 
+const OFFICIAL_HELP_CENTER_ORIGIN = 'https://fluxer.app';
+
+export function helpCenterUrl(path: string): string {
+	if (RuntimeConfig.isSelfHosted()) {
+		return `${OFFICIAL_HELP_CENTER_ORIGIN}/${path}`;
+	}
+	return marketingUrl(path);
+}
+
 export function adminUrl(path: string): string {
 	return `${RuntimeConfig.adminEndpoint}/${path}`;
 }

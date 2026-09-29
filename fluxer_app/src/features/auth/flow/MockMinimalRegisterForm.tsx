@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
+import {getPrivacyUrl, getTermsUrl} from '@app/features/app/utils/LegalUrls';
 import authStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import dobStyles from '@app/features/auth/flow/DateOfBirthField.module.css';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
@@ -38,6 +38,8 @@ interface MockMinimalRegisterFormProps {
 }
 
 export function MockMinimalRegisterForm({submitLabel}: MockMinimalRegisterFormProps) {
+	const termsUrl = getTermsUrl();
+	const privacyUrl = getPrivacyUrl();
 	const {i18n} = useLingui();
 	const locale = getCurrentLocale();
 	const fieldOrder = useMemo(() => getDateFieldOrder(locale), [locale]);
@@ -115,30 +117,63 @@ export function MockMinimalRegisterForm({submitLabel}: MockMinimalRegisterFormPr
 					</div>
 				</div>
 			</div>
-			<div className={authStyles.consentRow} data-flx="auth.flow.mock-minimal-register-form.div--12">
-				<Checkbox checked={false} onChange={() => {}} disabled data-flx="auth.flow.mock-minimal-register-form.checkbox">
-					<span className={authStyles.consentLabel} data-flx="auth.flow.mock-minimal-register-form.span--3">
-						<Trans>
-							I agree to the{' '}
-							<ExternalLink
-								href={Routes.terms()}
-								className={authStyles.policyLink}
-								data-flx="auth.flow.mock-minimal-register-form.external-link"
-							>
-								Terms of service
-							</ExternalLink>{' '}
-							and{' '}
-							<ExternalLink
-								href={Routes.privacy()}
-								className={authStyles.policyLink}
-								data-flx="auth.flow.mock-minimal-register-form.external-link--2"
-							>
-								Privacy policy
-							</ExternalLink>
-						</Trans>
-					</span>
-				</Checkbox>
-			</div>
+			{termsUrl || privacyUrl ? (
+				<div className={authStyles.consentRow} data-flx="auth.flow.mock-minimal-register-form.div--12">
+					<Checkbox
+						checked={false}
+						onChange={() => {}}
+						disabled
+						data-flx="auth.flow.mock-minimal-register-form.checkbox"
+					>
+						<span className={authStyles.consentLabel} data-flx="auth.flow.mock-minimal-register-form.span--3">
+							{termsUrl && privacyUrl ? (
+								<Trans>
+									I agree to the{' '}
+									<ExternalLink
+										href={termsUrl}
+										className={authStyles.policyLink}
+										data-flx="auth.flow.mock-minimal-register-form.external-link"
+									>
+										Terms of service
+									</ExternalLink>{' '}
+									and{' '}
+									<ExternalLink
+										href={privacyUrl}
+										className={authStyles.policyLink}
+										data-flx="auth.flow.mock-minimal-register-form.external-link--2"
+									>
+										Privacy policy
+									</ExternalLink>
+								</Trans>
+							) : null}
+							{termsUrl && !privacyUrl ? (
+								<Trans>
+									I agree to the{' '}
+									<ExternalLink
+										href={termsUrl}
+										className={authStyles.policyLink}
+										data-flx="auth.flow.mock-minimal-register-form.external-link"
+									>
+										Terms of service
+									</ExternalLink>
+								</Trans>
+							) : null}
+							{!termsUrl && privacyUrl ? (
+								<Trans>
+									I agree to the{' '}
+									<ExternalLink
+										href={privacyUrl}
+										className={authStyles.policyLink}
+										data-flx="auth.flow.mock-minimal-register-form.external-link--2"
+									>
+										Privacy policy
+									</ExternalLink>
+								</Trans>
+							) : null}
+						</span>
+					</Checkbox>
+				</div>
+			) : null}
 			<Button type="button" fitContainer disabled data-flx="auth.flow.mock-minimal-register-form.button">
 				{submitLabel}
 			</Button>
