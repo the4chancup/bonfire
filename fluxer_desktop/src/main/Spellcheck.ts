@@ -5,7 +5,7 @@ import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import * as path from 'node:path';
-import {STATIC_CDN_URL} from '@electron/common/Constants';
+import {getSpellcheckDictionaryBaseUrl} from '@electron/common/Constants';
 import type {SpellcheckBundledDictionary} from '@electron/common/Types';
 import {getSpellcheckLaunchMode, type SpellcheckLaunchMode} from '@electron/main/LaunchOptions';
 import {getNativeLocale} from '@electron/main/MainI18n';
@@ -95,10 +95,7 @@ interface LoadedHunspell {
 	dicPath: string;
 }
 
-const STATIC_CDN_ENDPOINT = process.env.FLUXER_STATIC_CDN_ENDPOINT?.replace(/\/+$/, '') ?? '';
-const DICTIONARY_DOWNLOAD_BASE_URL =
-	process.env.FLUXER_SPELLCHECK_DICTIONARY_BASE_URL ||
-	`${STATIC_CDN_ENDPOINT || STATIC_CDN_URL}/desktop/spellcheck/dictionaries`;
+const DICTIONARY_DOWNLOAD_BASE_URL = getSpellcheckDictionaryBaseUrl(process.env);
 const DICTIONARY_CACHE_VERSION = 1;
 const DICTIONARY_DOWNLOAD_TIMEOUT_MS = 15000;
 const DICTIONARY_RETRY_DELAYS_MS: ReadonlyArray<number> = [5000, 15000, 45000];
