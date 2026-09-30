@@ -11,7 +11,7 @@ import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {AndroidLogoIcon, AppleLogoIcon, WindowsLogoIcon} from '@phosphor-icons/react';
+import {LinuxLogoIcon, WindowsLogoIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 const DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR = msg({
@@ -45,20 +45,15 @@ export const DesktopDownloadNagbar = observer(({isMobile}: {isMobile: boolean}) 
 							className={styles.platformIcons}
 							data-flx="app.app-layout.nagbars.desktop-download-nagbar.platform-icons"
 						>
-							<AppleLogoIcon
+							<WindowsLogoIcon
 								weight="fill"
 								className={styles.platformIcon}
 								data-flx="app.app-layout.nagbars.desktop-download-nagbar.platform-icon"
 							/>
-							<AndroidLogoIcon
+							<LinuxLogoIcon
 								weight="fill"
 								className={styles.platformIcon}
 								data-flx="app.app-layout.nagbars.desktop-download-nagbar.platform-icon--2"
-							/>
-							<WindowsLogoIcon
-								weight="fill"
-								className={styles.platformIcon}
-								data-flx="app.app-layout.nagbars.desktop-download-nagbar.platform-icon--3"
 							/>
 						</span>
 						<NagbarButton

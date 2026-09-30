@@ -14,6 +14,8 @@ import {
 	pushDesktopUpdateDownloadFailedModal,
 	pushDesktopUpdateInstallFailedModal,
 	pushManualUpdateAvailableModal,
+	pushNativeUpdateAvailableModal,
+	pushNativeUpdateDownloadingModal,
 	pushUnsupportedUpdateModal,
 	pushUpdateAvailableModal,
 	pushUpdateCheckFailedModal,
@@ -630,6 +632,14 @@ class Updater {
 		}
 		if (this.nativeUpdateReady) {
 			pushUpdateReadyModal(this.updateInfo.native.version, this.applyUpdate);
+			return;
+		}
+		if (this.nativeAwaitingDownload) {
+			pushNativeUpdateAvailableModal(this.updateInfo.native.version, () => this.startNativeDownload());
+			return;
+		}
+		if (this.nativeDownloadInFlight) {
+			pushNativeUpdateDownloadingModal();
 			return;
 		}
 		if (this.hasUpdate) {

@@ -6,7 +6,7 @@ import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/voice/components/modals/ScreenSharePickerModal.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {AppleLogoIcon, LinuxLogoIcon, WindowsLogoIcon} from '@phosphor-icons/react';
+import {LinuxLogoIcon, WindowsLogoIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 const BEST_WITH_THE_DESKTOP_APP_DESCRIPTOR = msg({
@@ -39,20 +39,15 @@ export const DesktopDownloadCta: React.FC = () => {
 					aria-hidden={true}
 					data-flx="voice.screen-share-picker-modal.platform-icons"
 				>
-					<AppleLogoIcon
+					<WindowsLogoIcon
 						weight="fill"
 						className={styles.platformIcon}
 						data-flx="voice.screen-share-picker-modal.platform-icon"
 					/>
-					<WindowsLogoIcon
-						weight="fill"
-						className={styles.platformIcon}
-						data-flx="voice.screen-share-picker-modal.platform-icon--2"
-					/>
 					<LinuxLogoIcon
 						weight="fill"
 						className={styles.platformIcon}
-						data-flx="voice.screen-share-picker-modal.platform-icon--3"
+						data-flx="voice.screen-share-picker-modal.platform-icon--2"
 					/>
 				</div>
 				<Button

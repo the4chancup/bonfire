@@ -2,7 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLOSE_DESCRIPTOR, DOWNLOAD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {UpdaterDownloadFormat, UpdaterDownloadOption} from '@app/features/platform/types/Electron';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -25,6 +25,19 @@ const DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR = msg({
 const A_NEW_DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR = msg({
 	message: 'A new desktop version is available. Download the installer, then run it to update {productName}.',
 	comment: 'Desktop updater modal body when the exact target version is unknown. productName is the app name.',
+});
+const DOWNLOAD_UPDATE_WITH_VERSION_DESCRIPTOR = msg({
+	message: 'Download desktop update {version}',
+	comment:
+		'Desktop updater modal body prompting the user to start downloading a versioned update. The version placeholder is the target app version.',
+});
+const DOWNLOAD_UPDATE_DESCRIPTOR = msg({
+	message: 'Download desktop update',
+	comment: 'Desktop updater modal body prompting the user to start downloading an update with unknown version.',
+});
+const DOWNLOADING_DESKTOP_UPDATE_DESCRIPTOR = msg({
+	message: 'Downloading desktop update…',
+	comment: 'Desktop updater modal body shown while an update download is already in progress.',
 });
 const DOWNLOAD_INSTALLER_DESCRIPTOR = msg({
 	message: 'Download installer',
@@ -200,6 +213,40 @@ export function pushUpdateAvailableModal(version: string | null, onDownload: () 
 					await onDownload();
 				}}
 				data-flx="updater.updater-modal-commands.push-update-available-modal.confirm-modal"
+			/>
+		)),
+		UPDATE_AVAILABLE_KEY,
+	);
+}
+
+export function pushNativeUpdateAvailableModal(version: string | null, onDownload: () => void | Promise<void>): void {
+	ModalCommands.pushWithKey(
+		modal(() => (
+			<ConfirmModal
+				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
+				description={
+					version ? i18n._(DOWNLOAD_UPDATE_WITH_VERSION_DESCRIPTOR, {version}) : i18n._(DOWNLOAD_UPDATE_DESCRIPTOR)
+				}
+				primaryText={i18n._(DOWNLOAD_DESCRIPTOR)}
+				secondaryText={i18n._(LATER_DESCRIPTOR)}
+				onPrimary={async () => {
+					await onDownload();
+				}}
+				data-flx="updater.updater-modal-commands.push-native-update-available-modal.confirm-modal"
+			/>
+		)),
+		UPDATE_AVAILABLE_KEY,
+	);
+}
+
+export function pushNativeUpdateDownloadingModal(): void {
+	ModalCommands.pushWithKey(
+		modal(() => (
+			<ConfirmModal
+				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
+				description={i18n._(DOWNLOADING_DESKTOP_UPDATE_DESCRIPTOR)}
+				secondaryText={i18n._(CLOSE_DESCRIPTOR)}
+				data-flx="updater.updater-modal-commands.push-native-update-downloading-modal.confirm-modal"
 			/>
 		)),
 		UPDATE_AVAILABLE_KEY,
